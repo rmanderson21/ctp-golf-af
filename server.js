@@ -1,93 +1,121 @@
-# Closest to the Pin — Night Golf Bracket
+// Closest to the Pin — tiny backend
+//
+// Serves the site (from /public) and stores the current event/bracket
+// state as a single JSON blob on disk, at DATA_FILE below. The admin
+// panel and the TV display both read/write this same file through
+// /api/state, which is how they stay in sync — same idea as the
+// Claude artifact version, just backed by a real file instead of
+// Claude's storage.
+//
+// Separately, HISTORY_FILE holds an array of past completed tournaments,
+// archived automatically by the frontend whenever a champion is decided
+// and the admin starts fresh. The event-history page (/control.html)
+// reads from this independently of the live board.
 
-Your ESPN-style closest-to-the-pin bracket, running on your own domain.
-Same admin panel + TV display as before — just backed by a small server
-you host, instead of Claude's storage.
+const express = require('express');
+const fs = require('fs');
+const path = require('path');
 
-## What's in this folder
+const app = express();
+const PORT = process.env.PORT || 3000;
 
-- `server.js` — a tiny Node server. Serves the site and stores the
-  current event/bracket as one JSON file on disk, so the admin panel
-  (phone/iPad) and the TV display stay in sync.
-- `public/index.html` — the whole app (design, admin, TV display).
-- `package.json` — just one dependency (Express).
+// If you attach a persistent disk (recommended — see README), point
+// DATA_DIR at its mount path via the DATA_DIR env var. Otherwise this
+// falls back to a local file next to server.js.
+const DATA_DIR = process.env.DATA_DIR || __dirname;
+const DATA_FILE = path.join(DATA_DIR, 'data.json');
+const HISTORY_FILE = path.join(DATA_DIR, 'history.json');
+const MAX_HISTORY_EVENTS = 300; // sane cap so the file can't grow forever
 
-## Try it on your own computer first (optional but recommended)
+app.use(express.json({ limit: '2mb' }));
+app.use(express.static(path.join(__dirname, 'public')));
 
-You'll need [Node.js](https://nodejs.org) installed (v18 or newer).
+function readState() {
+  try {
+    const raw = fs.readFileSync(DATA_FILE, 'utf8');
+    return JSON.parse(raw);
+  } catch (e) {
+    return null; // no file yet, or unreadable — frontend handles null fine
+  }
+}
 
-```
-cd ctp-site
-npm install
-npm start
-```
+function writeState(obj) {
+  // write-then-rename so a crash mid-write can't corrupt the file
+  const tmp = DATA_FILE + '.tmp';
+  fs.writeFileSync(tmp, JSON.stringify(obj));
+  fs.renameSync(tmp, DATA_FILE);
+}
 
-Then open `http://localhost:3000` in a browser. Confirm the admin panel
-and display work the same as before. Ctrl+C to stop it.
+function readHistory() {
+  try {
+    const raw = fs.readFileSync(HISTORY_FILE, 'utf8');
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    return [];
+  }
+}
 
-## Getting it onto your domain
+function writeHistory(arr) {
+  const tmp = HISTORY_FILE + '.tmp';
+  fs.writeFileSync(tmp, JSON.stringify(arr));
+  fs.renameSync(tmp, HISTORY_FILE);
+}
 
-The easiest path is **Render.com** — one account, free custom domains,
-and you can add a small persistent disk so your event data survives
-restarts. Total cost is about $7/month for the smallest instance with a
-persistent disk (Render's free tier works too, but its disk is not
-guaranteed to survive a redeploy — see the note at the end).
+app.get('/api/state', (req, res) => {
+  res.json({ value: readState() });
+});
 
-### 1. Put this folder in a GitHub repo
-- Create a new repo on GitHub (can be private).
-- Upload this whole `ctp-site` folder to it (drag-and-drop on
-  github.com works fine if you don't use git normally).
+app.post('/api/state', (req, res) => {
+  try {
+    writeState(req.body);
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('Failed to write state:', e);
+    res.status(500).json({ ok: false, error: 'write failed' });
+  }
+});
 
-### 2. Create the web service on Render
-1. Go to [render.com](https://render.com) and sign up / log in.
-2. Click **New +** → **Web Service**.
-3. Connect your GitHub account and pick the repo you just created.
-4. Fill in:
-   - **Build Command:** `npm install`
-   - **Start Command:** `npm start`
-5. Click **Create Web Service**. Render will build and deploy it —
-   you'll get a URL like `https://your-app.onrender.com` that already
-   works.
+app.get('/api/history', (req, res) => {
+  const events = readHistory().sort((a, b) => (b.savedAt||0) - (a.savedAt||0));
+  res.json({ events });
+});
 
-### 3. Add a persistent disk (so your data doesn't reset)
-1. On your new service in Render, go to **Disks** → **Add Disk**.
-2. Mount path: `/data`, size: 1 GB is plenty.
-3. Go to **Environment** and add a variable:
-   - `DATA_DIR` = `/data`
-4. Save — Render will redeploy automatically. Your event data now
-   lives on that disk permanently.
+app.post('/api/history', (req, res) => {
+  try {
+    const event = req.body;
+    if(!event || !event.id) {
+      res.status(400).json({ ok:false, error: 'missing event id' });
+      return;
+    }
+    const events = readHistory();
+    const idx = events.findIndex(e => e.id === event.id);
+    if(idx >= 0) events[idx] = event; else events.push(event);
+    while(events.length > MAX_HISTORY_EVENTS) events.shift();
+    writeHistory(events);
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('Failed to write history:', e);
+    res.status(500).json({ ok: false, error: 'write failed' });
+  }
+});
 
-### 4. Point your domain at it
-1. On the Render service, go to **Settings** → **Custom Domains** →
-   **Add Custom Domain**. Enter something like `golf.yourdomain.com`
-   (a subdomain is simplest) or your root domain.
-2. Render shows you a DNS record to add (usually a `CNAME` pointing to
-   something like `your-app.onrender.com`, or an `A` record for a root
-   domain).
-3. Go to wherever you manage your domain's DNS (GoDaddy, Namecheap,
-   Google Domains, Cloudflare, etc.), and add that record.
-4. DNS changes can take anywhere from a few minutes to a few hours to
-   go live. Render will show a green checkmark once it's verified, and
-   will automatically issue you free HTTPS.
+app.delete('/api/history/:id', (req, res) => {
+  try {
+    const events = readHistory().filter(e => e.id !== req.params.id);
+    writeHistory(events);
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('Failed to delete history entry:', e);
+    res.status(500).json({ ok: false, error: 'delete failed' });
+  }
+});
 
-That's it — `https://golf.yourdomain.com` (or whatever you chose) now
-runs the exact same site, admin panel included.
+app.get('/healthz', (req, res) => res.send('ok'));
 
-## Day-of-event checklist
+app.listen(PORT, () => {
+  console.log(`Closest to the Pin server running on port ${PORT}`);
+  console.log(`Storing event data at ${DATA_FILE}`);
+  console.log(`Storing event history at ${HISTORY_FILE}`);
+});
 
-- Open the site on the TV's browser — leave it on the default
-  **Display** view (that's what shows on the projector/TV).
-- Open the same URL on your phone or iPad, tap **Admin View** top
-  right, and manage players/scores from there.
-- Both stay in sync automatically every few seconds.
-
-## A note on the free tier
-
-Render's free web services spin down after ~15 minutes of no traffic
-and take a few seconds to wake back up on the next visit — fine for a
-once-a-week event, just expect a short delay on the very first load.
-Free instances also don't support persistent disks, so if you skip
-step 3 above, a redeploy (or Render restarting the service) will reset
-your event data back to empty. If that's fine for your use case (fresh
-bracket each event anyway), the free tier alone works great — just add
-the disk if you'd rather not risk it.
