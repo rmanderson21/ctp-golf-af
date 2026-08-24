@@ -1,0 +1,9 @@
+{
+  "name": "Closest to the Pin",
+  "short_name": "CTP Golf",
+  "start_url": "/",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#060c16",
+  "theme_color": "#060c16"
+}
