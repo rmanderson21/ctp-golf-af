@@ -254,6 +254,34 @@
   align-items:center;
   justify-content:center;
 }
+  body.tv-mode{
+  overflow:hidden;
+}
+
+body.tv-mode .app{
+  height:100dvh;
+  min-height:0;
+  overflow:hidden;
+}
+
+body.tv-mode #view-display{
+  flex:1;
+  min-height:0;
+  overflow:hidden;
+}
+
+body.tv-mode .hole-head,
+body.tv-mode .hero,
+body.tv-mode .up-next-banner{
+  flex-shrink:0;
+}
+
+body.tv-mode .bracket-scroll{
+  flex:1;
+  min-height:0;
+  overflow:hidden;
+  padding-bottom:52px;
+}
   .bracket-wrap{position:relative; min-height:100px; transition:transform .25s ease;}
   .bracket-wrap svg{position:absolute; top:0; left:0; overflow:visible;}
   .round-col-label{
@@ -435,7 +463,7 @@
   }
 </style>
 </head>
-<body>
+<body class="tv-mode">
 
 <div class="boot-loading" id="boot-loading">
   <img src="/brand/pineapple.png" alt="Atlantic Fields">
@@ -1273,16 +1301,23 @@
   });
 
   document.getElementById('mode-toggle').addEventListener('click', () => {
-    const disp = document.getElementById('view-display');
-    const adm = document.getElementById('view-admin');
-    const btn = document.getElementById('mode-toggle');
-    if(adm.style.display === 'none'){
-      disp.style.display = 'none'; adm.style.display = 'block'; btn.textContent = 'TV Display';
-    } else {
-      adm.style.display = 'none'; disp.style.display = 'flex'; btn.textContent = 'Admin View';
-      fitBracketToScreen(); // the bracket had display:none while hidden, so its size needs recalculating now
-    }
-  });
+  const disp = document.getElementById('view-display');
+  const adm = document.getElementById('view-admin');
+  const btn = document.getElementById('mode-toggle');
+
+  if(adm.style.display === 'none'){
+    disp.style.display = 'none';
+    adm.style.display = 'block';
+    btn.textContent = 'TV Display';
+    document.body.classList.remove('tv-mode');
+  } else {
+    adm.style.display = 'none';
+    disp.style.display = 'flex';
+    btn.textContent = 'Admin View';
+    document.body.classList.add('tv-mode');
+    fitBracketToScreen();
+  }
+});
 
   document.getElementById('save-event-btn').addEventListener('click', () => {
     state.eventName = document.getElementById('input-event-name').value.trim() || 'Night Golf Event';
