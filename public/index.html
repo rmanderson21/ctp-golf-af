@@ -418,7 +418,13 @@ body.tv-mode .bracket-scroll{
   overflow:hidden;
   padding-bottom:52px;
 }
-  .bracket-wrap{position:relative; min-height:100px; transition:transform .25s ease;}
+ .bracket-wrap{
+  position:relative;
+  min-height:100px;
+  transition:transform .9s cubic-bezier(.2,.8,.2,1);
+  transform-origin:center center;
+  will-change:transform;
+}
   .round-collapse-out{
   opacity:0;
   transform:scale(.96) translateX(-18px) !important;
