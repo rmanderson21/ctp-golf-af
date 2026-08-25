@@ -132,6 +132,108 @@
   }
   .hero-matchup{display:flex; align-items:center; justify-content:center; gap:22px; flex-wrap:wrap;}
 
+  /* Animated matchup intro */
+.hero-intro{
+  overflow:hidden;
+  animation:heroPanelIn .8s cubic-bezier(.2,.8,.2,1) both;
+}
+
+.hero-intro .hero-tag{
+  animation:heroTagIn .7s ease-out .2s both;
+}
+
+.hero-intro .hero-round-big{
+  animation:heroRoundIn 1s cubic-bezier(.2,.9,.3,1.15) 1s both;
+}
+
+.hero-intro .hero-matchup{
+  animation:heroMatchupIn 1s cubic-bezier(.2,.8,.2,1) 4s both;
+}
+
+.hero-intro .hero-name:first-child{
+  animation:heroPlayerLeft .9s cubic-bezier(.2,.8,.2,1) 4s both;
+}
+
+.hero-intro .hero-name:last-child{
+  animation:heroPlayerRight .9s cubic-bezier(.2,.8,.2,1) 4s both;
+}
+
+.hero-intro .hero-vs{
+  animation:heroVsIn .6s ease-out 4.6s both;
+}
+
+.hero-exit{
+  animation:heroPanelOut 1.5s cubic-bezier(.4,0,.8,.2) forwards;
+}
+
+.hero-hidden{
+  display:none !important;
+}
+
+@keyframes heroPanelIn{
+  from{opacity:0; transform:translateY(-18px);}
+  to{opacity:1; transform:translateY(0);}
+}
+
+@keyframes heroTagIn{
+  from{opacity:0; transform:translateX(-18px);}
+  to{opacity:1; transform:translateX(0);}
+}
+
+@keyframes heroRoundIn{
+  from{
+    opacity:0;
+    transform:scale(.82);
+    letter-spacing:.12em;
+  }
+  to{
+    opacity:1;
+    transform:scale(1);
+    letter-spacing:.02em;
+  }
+}
+
+@keyframes heroMatchupIn{
+  from{opacity:0;}
+  to{opacity:1;}
+}
+
+@keyframes heroPlayerLeft{
+  from{opacity:0; transform:translateX(-45px);}
+  to{opacity:1; transform:translateX(0);}
+}
+
+@keyframes heroPlayerRight{
+  from{opacity:0; transform:translateX(45px);}
+  to{opacity:1; transform:translateX(0);}
+}
+
+@keyframes heroVsIn{
+  from{opacity:0; transform:scale(.4);}
+  to{opacity:1; transform:scale(1);}
+}
+
+@keyframes heroPanelOut{
+  0%{
+    opacity:1;
+    transform:translateY(0);
+    max-height:500px;
+  }
+  60%{
+    opacity:0;
+    transform:translateY(-18px);
+  }
+  100%{
+    opacity:0;
+    transform:translateY(-18px);
+    max-height:0;
+    margin-top:0;
+    margin-bottom:0;
+    padding-top:0;
+    padding-bottom:0;
+  }
+}
+
   /* up-next heads-up banner */
   .up-next-banner{
     margin:0 28px 14px; padding:13px 24px; border-radius:3px; background:var(--panel-2); border:1px solid var(--turf-line);
@@ -1001,18 +1103,60 @@ body.tv-mode .bracket-scroll{
       return;
     }
     const live = findLiveMatch();
+
     if(live){
-      hero.className = 'hero';
-      const totalRounds = state.bracket.rounds.length;
-      hero.innerHTML = '<div class="hero-tag">Now On The Tee</div>' +
-        '<div class="hero-round-big">' + roundLabel(live.ri, totalRounds) + '</div>' +
-        '<div class="hero-matchup">' +
-          '<div class="hero-name">' + escapeHtml(live.match.p1.name) + '</div>' +
-          '<div class="hero-vs">VS</div>' +
-          '<div class="hero-name">' + escapeHtml(live.match.p2.name) + '</div>' +
-        '</div>';
-      return;
+  const totalRounds = state.bracket.rounds.length;
+
+  const matchKey =
+    live.ri + '-' +
+    live.mi + '-' +
+    live.match.p1.name + '-' +
+    live.match.p2.name;
+
+  if(window.lastHeroMatchKey !== matchKey){
+    window.lastHeroMatchKey = matchKey;
+
+    if(window.heroIntroTimer){
+      clearTimeout(window.heroIntroTimer);
     }
+
+    hero.className = 'hero hero-intro';
+
+    hero.innerHTML =
+      '<div class="hero-tag">Now On The Tee</div>' +
+      '<div class="hero-round-big">' +
+        roundLabel(live.ri, totalRounds) +
+      '</div>' +
+      '<div class="hero-matchup">' +
+        '<div class="hero-name">' +
+          escapeHtml(live.match.p1.name) +
+        '</div>' +
+        '<div class="hero-vs">VS</div>' +
+        '<div class="hero-name">' +
+          escapeHtml(live.match.p2.name) +
+        '</div>' +
+      '</div>';
+
+    window.heroIntroTimer = setTimeout(() => {
+      hero.classList.add('hero-exit');
+
+      setTimeout(() => {
+        hero.className = 'hero hero-hidden';
+        hero.innerHTML = '';
+        fitBracketToScreen();
+      }, 1500);
+
+    }, 14500);
+  }
+
+  return;
+}
+window.lastHeroMatchKey = null;
+
+if(window.heroIntroTimer){
+  clearTimeout(window.heroIntroTimer);
+  window.heroIntroTimer = null;
+}
     if(state.bracket){
       hero.className = 'hero empty-hero';
       hero.textContent = 'Bracket in progress…';
