@@ -1,9 +1,16 @@
 {
-  "name": "Closest to the Pin",
-  "short_name": "CTP Golf",
-  "start_url": "/",
-  "display": "fullscreen",
-  "orientation": "landscape",
-  "background_color": "#060c16",
-  "theme_color": "#060c16"
+  "name": "closest-to-the-pin",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Night golf closest-to-the-pin bracket — admin panel + TV display",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
 }
