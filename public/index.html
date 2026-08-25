@@ -456,50 +456,8 @@ body.tv-mode .bracket-scroll{
     padding:8px 12px; display:flex; flex-direction:column; justify-content:center; gap:3px;
     font-family:var(--font-body); font-size:16px;
   }
-  /* Final Four / Semifinal treatment */
-.match-box.final-four{
-  font-size:20px;
-  padding:12px 16px;
-  border-width:1px;
-  transform:scale(1.22);
-transform-origin:center center;
-z-index:5;
-  box-shadow:
-    0 0 0 1px rgba(255,222,89,.14),
-    0 0 18px rgba(255,222,89,.10);
-}
 
-.match-box.final-four .mb-name{
-  max-width:190px;
-}
 
-.match-box.final-four .mb-dist{
-  font-size:15px;
-}
-
-/* Championship match treatment */
-.match-box.championship{
-  font-size:28px;
-  padding:18px 22px;
-  gap:8px;
-  border:2px solid var(--glow);
-  transform:scale(1.25);
-  transform-origin:center center;
-  z-index:10;
-  box-shadow:
-    0 0 0 1px rgba(255,222,89,.25),
-    0 0 28px rgba(255,222,89,.22),
-    0 0 60px rgba(255,222,89,.10);
-}
-
-.match-box.championship .mb-name{
-  max-width:260px;
-  font-weight:800;
-}
-
-.match-box.championship .mb-dist{
-  font-size:18px;
-}
   .match-box.live{border-color:var(--glow); box-shadow:0 0 0 1px rgba(255,222,89,.25), 0 0 14px rgba(255,222,89,.25); animation:liveGlow 1.8s ease-in-out infinite;}
   @keyframes liveGlow{0%,100%{box-shadow:0 0 0 1px rgba(255,222,89,.25), 0 0 10px rgba(255,222,89,.2);} 50%{box-shadow:0 0 0 1px rgba(255,222,89,.5), 0 0 20px rgba(255,222,89,.45);}}
   .match-box .mb-side{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:2px 0; color:var(--steel); font-weight:700;}
@@ -1497,10 +1455,9 @@ const containerWidth =
         const top = centers[ri][mi] - MH/2;
         const left = ri*(CW+RG);
         let cls = 'match-box';
-        const actualRoundIndex = ri + firstVisibleRound;
+        
 
-if(actualRoundIndex === totalRounds - 2) cls += ' final-four';
-if(actualRoundIndex === totalRounds - 1) cls += ' championship';
+
         let inner = '';
         if(m.bye){
           cls += ' bye';
