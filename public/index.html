@@ -1239,11 +1239,34 @@ if(window.heroIntroTimer){
       prevWinnersSnapshot = null;
       return;
     }
-    const rounds = state.bracket.rounds;
-    const totalRounds = rounds.length;
-    const centers = computeCenters(rounds[0].length, totalRounds);
-    const containerHeight = centers[0][centers[0].length-1] + MH/2 + 30;
-    const containerWidth = totalRounds*CW + (totalRounds-1)*RG + 4;
+   const rounds = state.bracket.rounds;
+const totalRounds = rounds.length;
+
+// Find the first round that still has an undecided match.
+// Every fully completed round before it will disappear from the TV bracket.
+let firstVisibleRound = rounds.findIndex(round =>
+  round.some(match => !match.winner)
+);
+
+if(firstVisibleRound === -1){
+  firstVisibleRound = Math.max(0, totalRounds - 1);
+}
+
+const visibleRounds = rounds.slice(firstVisibleRound);
+const visibleRoundCount = visibleRounds.length;
+
+const centers = computeCenters(
+  visibleRounds[0].length,
+  visibleRoundCount
+);
+
+const containerHeight =
+  centers[0][centers[0].length - 1] + MH/2 + 30;
+
+const containerWidth =
+  visibleRoundCount * CW +
+  (visibleRoundCount - 1) * RG +
+  4;
 
     wrap.style.height = containerHeight + 'px';
     wrap.style.width = containerWidth + 'px';
@@ -1265,7 +1288,7 @@ if(window.heroIntroTimer){
     prevWinnersSnapshot = currentWinners;
 
     let html = '<svg width="' + containerWidth + '" height="' + containerHeight + '">';
-    for(let r=0; r<totalRounds-1; r++){
+    for(let r=0; r<visibleRoundCount-1; r++){
       const pairs = centers[r].length/2;
       for(let i=0;i<pairs;i++){
         const x1 = r*(CW+RG)+CW;
@@ -1273,7 +1296,7 @@ if(window.heroIntroTimer){
         const x2 = (r+1)*(CW+RG);
         const yA = centers[r][2*i], yB = centers[r][2*i+1];
         const yP = centers[r+1][i];
-        const parentMatch = rounds[r+1][i];
+        const parentMatch = visibleRounds[r+1][i];
         const resolved = parentMatch.p1 && parentMatch.p2;
         const color = resolved ? 'rgba(255,222,89,.55)' : 'rgba(29,63,92,1)';
         html += '<line x1="'+x1+'" y1="'+yA+'" x2="'+xMid+'" y2="'+yA+'" stroke="'+color+'" stroke-width="2"/>';
@@ -1284,8 +1307,8 @@ if(window.heroIntroTimer){
     }
     html += '</svg>';
 
-    rounds.forEach((round, ri) => {
-      html += '<div class="round-col-label" style="left:'+(ri*(CW+RG))+'px;">' + roundLabel(ri, totalRounds) + '</div>';
+    visibleRounds.forEach((round, ri) => {
+      html += '<div class="round-col-label" style="left:'+(ri*(CW+RG))+'px;">' + roundLabel(ri + firstVisibleRound, totalRounds) + '</div>';
       round.forEach((m, mi) => {
         const top = centers[ri][mi] - MH/2;
         const left = ri*(CW+RG);
@@ -1302,7 +1325,7 @@ if(window.heroIntroTimer){
           const p2win = m.winner && m.winner.id === m.p2.id;
           if(!m.winner){
             const live = findLiveMatch();
-            if(live && live.ri === ri && live.mi === mi) cls += ' live';
+            if(live && live.ri === (ri + firstVisibleRound) && live.mi === mi) cls += ' live';
           }
           inner = '<div class="mb-side'+(p1win?' winner':'')+'"><span class="mb-name">' + escapeHtml(m.p1.name) + '</span><span class="mb-dist">' + (m.winner ? fmtDist(m.d1) : '') + '</span></div>' +
                   '<div class="mb-side'+(p2win?' winner':'')+'"><span class="mb-name">' + escapeHtml(m.p2.name) + '</span><span class="mb-dist">' + (m.winner ? fmtDist(m.d2) : '') + '</span></div>';
