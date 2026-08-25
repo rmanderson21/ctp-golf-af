@@ -235,15 +235,45 @@
 }
 
   /* up-next heads-up banner */
-  .up-next-banner{
-    margin:0 28px 14px; padding:13px 24px; border-radius:3px; background:var(--panel-2); border:1px solid var(--turf-line);
-    display:flex; align-items:center; justify-content:center; gap:14px; flex-wrap:wrap;
-    animation:upNextIn .5s cubic-bezier(.25,.9,.4,1.2) both;
+  .hole-info{
+  display:flex;
+  align-items:baseline;
+  min-width:0;
+}
+
+.hole-head-right{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:22px;
+  margin-left:auto;
+  min-width:0;
+}
+
+.up-next-banner{
+  margin:0;
+  padding:8px 16px;
+  border-radius:3px;
+  background:transparent;
+  border:0;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:14px;
+  flex-wrap:wrap;
+  animation:upNextIn .55s cubic-bezier(.25,.9,.4,1.2) both;
+}
+
+@keyframes upNextIn{
+  0%{
+    transform:translateX(24px);
+    opacity:0;
   }
-  @keyframes upNextIn{
-    0%{ transform:translateY(-16px); opacity:0; }
-    100%{ transform:translateY(0); opacity:1; }
+  100%{
+    transform:translateX(0);
+    opacity:1;
   }
+}
   .un-tag{
     font-family:var(--font-cond); font-weight:800; letter-spacing:.14em; text-transform:uppercase; font-size:12px;
     color:var(--glow); background:rgba(255,222,89,.12); border:1px solid rgba(255,222,89,.45);
@@ -373,9 +403,13 @@ body.tv-mode #view-display{
 }
 
 body.tv-mode .hole-head,
-body.tv-mode .hero,
-body.tv-mode .up-next-banner{
+body.tv-mode .hero{
   flex-shrink:0;
+}
+
+body.tv-mode .hole-head{
+  padding:12px 28px 8px;
+  align-items:center;
 }
 
 body.tv-mode .bracket-scroll{
@@ -599,20 +633,23 @@ body.tv-mode .bracket-scroll{
   <!-- DISPLAY VIEW -->
   <div id="view-display">
     <div class="hole-head">
-      <div style="display:flex; align-items:baseline;">
-        <div class="hole-number" id="stage-hole-num">—</div>
-        <div class="hole-sub" id="stage-hole-sub">SET YOUR HOLE IN ADMIN</div>
-      </div>
-      <svg class="flight-arc" viewBox="0 0 150 56" fill="none">
-        <path d="M6 50 Q 75 -10 144 50" stroke="#ffde59" stroke-width="2" stroke-dasharray="1 8" stroke-linecap="round" opacity="0.7"/>
-        <circle cx="6" cy="50" r="4" fill="#ffde59"/>
-        <path d="M144 50 v-22 l14 6 -14 6" fill="#f0a83a"/>
-      </svg>
-    </div>
+  <div class="hole-info">
+    <div class="hole-number" id="stage-hole-num">—</div>
+    <div class="hole-sub" id="stage-hole-sub">SET YOUR HOLE IN ADMIN</div>
+  </div>
 
-    <div class="hero empty-hero" id="hero-banner">Set up players and generate a bracket to begin</div>
-
+  <div class="hole-head-right">
     <div class="up-next-banner" id="up-next-banner" style="display:none;"></div>
+
+    <svg class="flight-arc" viewBox="0 0 150 56" fill="none">
+      <path d="M6 50 Q 75 -10 144 50" stroke="#ffde59" stroke-width="2" stroke-dasharray="1 8" stroke-linecap="round" opacity="0.7"/>
+      <circle cx="6" cy="50" r="4" fill="#ffde59"/>
+      <path d="M144 50 v-22 l14 6 -14 6" fill="#f0a83a"/>
+    </svg>
+  </div>
+</div>
+
+<div class="hero empty-hero" id="hero-banner">Set up players and generate a bracket to begin</div>
 
     <div class="bracket-scroll" id="bracket-scroll">
       <div class="bracket-wrap" id="bracket-wrap"></div>
