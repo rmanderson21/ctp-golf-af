@@ -245,7 +245,15 @@
   .champ-recap-row .cr-dist{font-family:var(--font-mono); color:var(--glow); font-weight:800; flex-shrink:0;}
 
   /* bracket tree */
-  .bracket-scroll{flex:1; overflow:hidden; padding:0 28px 60px; display:flex; align-items:center; justify-content:center;}
+  .bracket-scroll{flex:1;
+  min-height:0;
+  min-width:0;
+  overflow:hidden;
+  padding:0 28px 60px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
   .bracket-wrap{position:relative; min-height:100px; transition:transform .25s ease;}
   .bracket-wrap svg{position:absolute; top:0; left:0; overflow:visible;}
   .round-col-label{
@@ -1100,28 +1108,41 @@
   }
 
   function fitBracketToScreen(){
-    const scrollEl = document.getElementById('bracket-scroll');
-    const wrap = document.getElementById('bracket-wrap');
-    if(!scrollEl || !wrap || !wrap.dataset.rawWidth) return;
-    const rawW = parseFloat(wrap.dataset.rawWidth);
-    const rawH = parseFloat(wrap.dataset.rawHeight);
-    if(!rawW || !rawH) return;
-    const availW = scrollEl.clientWidth - 12;
-    const availH = scrollEl.clientHeight - 12;
-    const cs = getComputedStyle(scrollEl);
-    const padTotalW = (parseFloat(cs.paddingLeft)||0) + (parseFloat(cs.paddingRight)||0);
-    const padTotalH = (parseFloat(cs.paddingTop)||0) + (parseFloat(cs.paddingBottom)||0);
-    const usableW = availW - padTotalW;
-    const usableH = availH - padTotalH;
-    // Shrink (or gently enlarge) the whole bracket so every matchup is visible at once —
-    // but never shrink past a readable floor; beyond that, fall back to scrolling instead.
-    let scale = Math.min(usableW / rawW, usableH / rawH, 1.3);
-    let needsScroll = false;
-    if(scale < 0.4){ scale = 0.4; needsScroll = true; }
-    wrap.style.transform = 'scale(' + scale + ')';
-    scrollEl.style.overflow = needsScroll ? 'auto' : 'hidden';
-    scrollEl.style.justifyContent = needsScroll ? 'flex-start' : 'center';
-  }
+  const scrollEl = document.getElementById('bracket-scroll');
+  const wrap = document.getElementById('bracket-wrap');
+
+  if(!scrollEl || !wrap || !wrap.dataset.rawWidth) return;
+
+  const rawW = parseFloat(wrap.dataset.rawWidth);
+  const rawH = parseFloat(wrap.dataset.rawHeight);
+  if(!rawW || !rawH) return;
+
+  const cs = getComputedStyle(scrollEl);
+
+  const padW =
+    (parseFloat(cs.paddingLeft) || 0) +
+    (parseFloat(cs.paddingRight) || 0);
+
+  const padH =
+    (parseFloat(cs.paddingTop) || 0) +
+    (parseFloat(cs.paddingBottom) || 0);
+
+  const usableW = Math.max(100, scrollEl.clientWidth - padW - 20);
+  const usableH = Math.max(100, scrollEl.clientHeight - padH - 20);
+
+  const scale = Math.min(
+    usableW / rawW,
+    usableH / rawH,
+    1.25
+  );
+
+  wrap.style.transformOrigin = 'center center';
+  wrap.style.transform = `scale(${scale})`;
+
+  scrollEl.style.overflow = 'hidden';
+  scrollEl.style.justifyContent = 'center';
+  scrollEl.style.alignItems = 'center';
+}
 
   let fitResizeTimer = null;
   window.addEventListener('resize', () => {
