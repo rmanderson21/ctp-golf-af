@@ -419,6 +419,27 @@ body.tv-mode .bracket-scroll{
   padding-bottom:52px;
 }
   .bracket-wrap{position:relative; min-height:100px; transition:transform .25s ease;}
+  .round-collapse-out{
+  opacity:0;
+  transform:scale(.96) translateX(-18px) !important;
+  transition:
+    opacity .9s ease,
+    transform .9s cubic-bezier(.4,0,.2,1) !important;
+}
+
+.round-collapse-in{
+  animation:roundCollapseIn .9s cubic-bezier(.2,.8,.2,1) both;
+}
+
+@keyframes roundCollapseIn{
+  from{
+    opacity:0;
+    transform:scale(.94) translateX(20px);
+  }
+  to{
+    opacity:1;
+  }
+}
   .bracket-wrap svg{position:absolute; top:0; left:0; overflow:visible;}
   .round-col-label{
     position:absolute; top:-26px; font-family:var(--font-cond); font-size:11px; letter-spacing:.14em;
@@ -930,6 +951,7 @@ body.tv-mode .bracket-scroll{
     match.winner = {...winnerPlayer};
 
     state.resultsLog.unshift({
+      ri: ri,
       roundLabel: roundLabel(ri, state.bracket.rounds.length),
       winner: winnerPlayer.name,
       loser: loserPlayer.name,
@@ -1140,6 +1162,48 @@ body.tv-mode .bracket-scroll{
       return;
     }
     const live = findLiveMatch();
+    // If the final match of a round was just completed,
+// wait for the result hold + bracket transition before
+// introducing the next matchup.
+const latestHeroResult = state.resultsLog && state.resultsLog[0];
+
+if(latestHeroResult && typeof latestHeroResult.ri === 'number'){
+  const heroResultAge = Date.now() - latestHeroResult.ts;
+  const heroFinishedRound = state.bracket.rounds[latestHeroResult.ri];
+
+  const heroRoundComplete =
+    heroFinishedRound &&
+    heroFinishedRound.every(match => match.winner) &&
+    latestHeroResult.ri < state.bracket.rounds.length - 1;
+
+  if(heroRoundComplete && heroResultAge < 5900){
+
+    if(window.heroIntroTimer){
+      clearTimeout(window.heroIntroTimer);
+      window.heroIntroTimer = null;
+    }
+
+    hero.className = 'hero hero-hidden';
+    hero.innerHTML = '';
+
+    const holdKey =
+      latestHeroResult.ri + '-' + latestHeroResult.ts;
+
+    if(window.heroRoundHoldKey !== holdKey){
+      window.heroRoundHoldKey = holdKey;
+
+      clearTimeout(window.heroRoundHoldTimer);
+
+      window.heroRoundHoldTimer = setTimeout(() => {
+        // Force the new matchup to get its full intro animation.
+        window.lastHeroMatchKey = null;
+        renderHero();
+      }, Math.max(0, 5900 - heroResultAge));
+    }
+
+    return;
+  }
+}
 
     if(live){
   const totalRounds = state.bracket.rounds.length;
@@ -1251,7 +1315,77 @@ let firstVisibleRound = rounds.findIndex(round =>
 if(firstVisibleRound === -1){
   firstVisibleRound = Math.max(0, totalRounds - 1);
 }
+    const latestResult = state.resultsLog && state.resultsLog[0];
 
+if(latestResult && typeof latestResult.ri === 'number'){
+  const resultAge = Date.now() - latestResult.ts;
+
+  const finishedRound = rounds[latestResult.ri];
+  const roundIsComplete =
+    finishedRound &&
+    finishedRound.every(match => match.winner);
+
+  if(
+    roundIsComplete &&
+    resultAge < 5000 &&
+    latestResult.ri < totalRounds - 1
+  ){
+    firstVisibleRound = Math.min(
+      firstVisibleRound,
+      latestResult.ri
+    );
+  }
+}
+// Smooth transition when a round has just finished
+if(latestResult && typeof latestResult.ri === 'number'){
+  const transitionAge = Date.now() - latestResult.ts;
+  const transitionRound = rounds[latestResult.ri];
+
+  const transitionRoundComplete =
+    transitionRound &&
+    transitionRound.every(match => match.winner) &&
+    latestResult.ri < totalRounds - 1;
+
+  if(transitionRoundComplete){
+
+    // During the final second of the 5-second result hold,
+    // gently fade the completed bracket out.
+    if(transitionAge >= 4000 && transitionAge < 5000){
+      wrap.classList.add('round-collapse-out');
+    }
+
+    // Schedule one precise rebuild at the 5-second mark.
+    const transitionKey = latestResult.ri + '-' + latestResult.ts;
+
+    if(
+      transitionAge < 5000 &&
+      window.roundCollapseKey !== transitionKey
+    ){
+      window.roundCollapseKey = transitionKey;
+
+      clearTimeout(window.roundCollapseTimer);
+
+      window.roundCollapseTimer = setTimeout(() => {
+
+        wrap.classList.remove('round-collapse-out');
+
+        // Re-render now that the completed round can disappear
+        renderBracketTree();
+        fitBracketToScreen();
+
+        // Animate the smaller remaining bracket back in
+        requestAnimationFrame(() => {
+          wrap.classList.add('round-collapse-in');
+
+          setTimeout(() => {
+            wrap.classList.remove('round-collapse-in');
+          }, 900);
+        });
+
+      }, Math.max(0, 5000 - transitionAge));
+    }
+  }
+}
 const visibleRounds = rounds.slice(firstVisibleRound);
 const visibleRoundCount = visibleRounds.length;
 
