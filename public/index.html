@@ -1092,6 +1092,7 @@ body.tv-mode .bracket-scroll{
   }
 
   function renderMatchCardHtml(m, ri, mi, totalRounds){
+    const isChampionship = ri === totalRounds - 1;
     if(m.bye){
       const w = m.winner;
       return '<div class="match-card"><div class="mc-label">Match ' + (mi+1) + '</div>' +
@@ -1107,22 +1108,53 @@ body.tv-mode .bracket-scroll{
         '<div class="mc-side-done' + (p1win?' won':'') + '"><span>' + escapeHtml(m.p1.name) + '</span><span class="mc-dist">' + fmtDist(m.d1) + '</span></div>' +
         '<div class="mc-side-done' + (!p1win?' won':'') + '"><span>' + escapeHtml(m.p2.name) + '</span><span class="mc-dist">' + fmtDist(m.d2) + '</span></div></div>';
     }
-    return '<div class="match-card ready" data-round="' + ri + '" data-match="' + mi + '">' +
-      '<div class="mc-label">Match ' + (mi+1) + ' <span class="mc-live">Ready</span></div>' +
-      '<div class="match-side" data-side="p1">' +
-        '<span class="mc-name">' + escapeHtml(m.p1.name) + '</span>' +
-        '<input type="number" class="ft-input" placeholder="ft" min="0">' +
-        '<input type="number" class="in-input" placeholder="in" min="0" max="11">' +
-        '<button class="btn small declare-btn" data-player-id="' + m.p1.id + '">Winner</button>' +
-      '</div>' +
-      '<div class="mc-vs">VS</div>' +
-      '<div class="match-side" data-side="p2">' +
-        '<span class="mc-name">' + escapeHtml(m.p2.name) + '</span>' +
-        '<input type="number" class="ft-input" placeholder="ft" min="0">' +
-        '<input type="number" class="in-input" placeholder="in" min="0" max="11">' +
-        '<button class="btn small declare-btn" data-player-id="' + m.p2.id + '">Winner</button>' +
-      '</div>' +
-    '</div>';
+   if(isChampionship){
+  return '<div class="match-card ready championship-entry" data-round="' + ri + '" data-match="' + mi + '">' +
+    '<div class="mc-label">CHAMPIONSHIP <span class="mc-live">3 SHOTS EACH</span></div>' +
+
+    '<div class="match-side" data-side="p1">' +
+      '<span class="mc-name">' + escapeHtml(m.p1.name) + '</span>' +
+      '<div>Shot 1: <input type="number" class="ft-input shot-ft" placeholder="ft" min="0"> ' +
+      '<input type="number" class="in-input shot-in" placeholder="in" min="0" max="11"></div>' +
+      '<div>Shot 2: <input type="number" class="ft-input shot-ft" placeholder="ft" min="0"> ' +
+      '<input type="number" class="in-input shot-in" placeholder="in" min="0" max="11"></div>' +
+      '<div>Shot 3: <input type="number" class="ft-input shot-ft" placeholder="ft" min="0"> ' +
+      '<input type="number" class="in-input shot-in" placeholder="in" min="0" max="11"></div>' +
+      
+    '</div>' +
+
+    '<div class="mc-vs">VS</div>' +
+
+    '<div class="match-side" data-side="p2">' +
+      '<span class="mc-name">' + escapeHtml(m.p2.name) + '</span>' +
+      '<div>Shot 1: <input type="number" class="ft-input shot-ft" placeholder="ft" min="0"> ' +
+      '<input type="number" class="in-input shot-in" placeholder="in" min="0" max="11"></div>' +
+      '<div>Shot 2: <input type="number" class="ft-input shot-ft" placeholder="ft" min="0"> ' +
+      '<input type="number" class="in-input shot-in" placeholder="in" min="0" max="11"></div>' +
+      '<div>Shot 3: <input type="number" class="ft-input shot-ft" placeholder="ft" min="0"> ' +
+      '<input type="number" class="in-input shot-in" placeholder="in" min="0" max="11"></div>' +
+     
+    '</div>' +
+'<button class="btn small declare-btn championship-complete">COMPLETE CHAMPIONSHIP</button>' +
+'</div>';
+}
+
+return '<div class="match-card ready" data-round="' + ri + '" data-match="' + mi + '">' +
+  '<div class="mc-label">Match ' + (mi+1) + ' <span class="mc-live">Ready</span></div>' +
+  '<div class="match-side" data-side="p1">' +
+    '<span class="mc-name">' + escapeHtml(m.p1.name) + '</span>' +
+    '<input type="number" class="ft-input" placeholder="ft" min="0">' +
+    '<input type="number" class="in-input" placeholder="in" min="0" max="11">' +
+    '<button class="btn small declare-btn" data-player-id="' + m.p1.id + '">Winner</button>' +
+  '</div>' +
+  '<div class="mc-vs">VS</div>' +
+  '<div class="match-side" data-side="p2">' +
+    '<span class="mc-name">' + escapeHtml(m.p2.name) + '</span>' +
+    '<input type="number" class="ft-input" placeholder="ft" min="0">' +
+    '<input type="number" class="in-input" placeholder="in" min="0" max="11">' +
+    '<button class="btn small declare-btn" data-player-id="' + m.p2.id + '">Winner</button>' +
+  '</div>' +
+'</div>';
   }
 
   document.getElementById('admin-matches').addEventListener('click', (e) => {
@@ -1131,21 +1163,83 @@ body.tv-mode .bracket-scroll{
     const card = btn.closest('.match-card');
     const ri = parseInt(card.dataset.round, 10);
     const mi = parseInt(card.dataset.match, 10);
-    const sides = card.querySelectorAll('.match-side');
-    const dists = {};
-    sides.forEach(side => {
-      const key = side.dataset.side;
-      const ftEl = side.querySelector('.ft-input');
-      const inEl = side.querySelector('.in-input');
-      const hasVal = ftEl.value !== '' || inEl.value !== '';
-      const ft = parseInt(ftEl.value, 10);
-      const inch = parseInt(inEl.value, 10);
-      dists[key] = hasVal ? {feet: isNaN(ft)?0:ft, inches: isNaN(inch)?0:inch} : null;
+   const sides = card.querySelectorAll('.match-side');
+const dists = {};
+const isChampionship = card.classList.contains('championship-entry');
+
+sides.forEach(side => {
+  const key = side.dataset.side;
+
+  if(isChampionship){
+    const ftInputs = side.querySelectorAll('.shot-ft');
+    const inInputs = side.querySelectorAll('.shot-in');
+    const shots = [];
+
+    for(let i = 0; i < 3; i++){
+      const hasVal = ftInputs[i].value !== '' || inInputs[i].value !== '';
+      if(!hasVal) continue;
+
+      const ft = parseInt(ftInputs[i].value, 10);
+      const inch = parseInt(inInputs[i].value, 10);
+
+      const shot = {
+        feet: isNaN(ft) ? 0 : ft,
+        inches: isNaN(inch) ? 0 : inch
+      };
+
+      shots.push(shot);
+    }
+
+    if(shots.length !== 3){
+      dists[key] = null;
+      return;
+    }
+state.bracket.rounds[ri][mi][key + 'Shots'] = shots;
+    dists[key] = shots.reduce((best, shot) => {
+      const bestTotal = best.feet * 12 + best.inches;
+      const shotTotal = shot.feet * 12 + shot.inches;
+      return shotTotal < bestTotal ? shot : best;
     });
-    const winnerId = btn.dataset.playerId;
-    resolveMatch(ri, mi, winnerId, dists.p1, dists.p2);
-    scheduleSave(); renderAll();
-  });
+
+  } else {
+    const ftEl = side.querySelector('.ft-input');
+    const inEl = side.querySelector('.in-input');
+    const hasVal = ftEl.value !== '' || inEl.value !== '';
+    const ft = parseInt(ftEl.value, 10);
+    const inch = parseInt(inEl.value, 10);
+
+    dists[key] = hasVal ? {
+      feet: isNaN(ft) ? 0 : ft,
+      inches: isNaN(inch) ? 0 : inch
+    } : null;
+  }
+});
+  let winnerId;
+
+if(isChampionship){
+  if(!dists.p1 || !dists.p2){
+    alert('Please enter all 3 shots for both players.');
+    return;
+  }
+
+  const p1Total = dists.p1.feet * 12 + dists.p1.inches;
+  const p2Total = dists.p2.feet * 12 + dists.p2.inches;
+
+  if(p1Total === p2Total){
+    alert('The closest shots are tied. A winner must be determined before completing the Championship.');
+    return;
+  }
+
+  const match = state.bracket.rounds[ri][mi];
+  winnerId = p1Total < p2Total ? match.p1.id : match.p2.id;
+} else {
+  winnerId = btn.dataset.playerId;
+}
+
+resolveMatch(ri, mi, winnerId, dists.p1, dists.p2);
+scheduleSave();
+renderAll();
+});
 
   // ---------- render: display ----------
   function renderHoleHead(){
@@ -1163,8 +1257,28 @@ body.tv-mode .bracket-scroll{
   function renderHero(){
     const hero = document.getElementById('hero-banner');
     if(state.champion){
-      // the full-screen champion overlay (see renderChampionOverlay) is the real
-      // celebration moment — keep the hero strip simple underneath it.
+      // Keep the completed Championship bracket visible by itself while its
+      // final distances are being held on screen before the champion overlay.
+      const latestFinalResult = state.resultsLog && state.resultsLog[0];
+      const finalRoundIndex = state.bracket ? state.bracket.rounds.length - 1 : -1;
+      const finalResultAge =
+        latestFinalResult &&
+        latestFinalResult.ri === finalRoundIndex &&
+        typeof latestFinalResult.ts === 'number'
+          ? Date.now() - latestFinalResult.ts
+          : Infinity;
+
+      if(finalResultAge < 6000){
+        if(window.heroIntroTimer){
+          clearTimeout(window.heroIntroTimer);
+          window.heroIntroTimer = null;
+        }
+        hero.className = 'hero hero-hidden';
+        hero.innerHTML = '';
+        fitBracketToScreen();
+        return;
+      }
+
       hero.className = 'hero empty-hero';
       hero.textContent = 'Tournament Complete';
       return;
@@ -1580,6 +1694,38 @@ const containerWidth =
   function renderChampionOverlay(){
     const overlay = document.getElementById('champion-overlay');
     if(!overlay) return;
+
+    // When the Championship is completed, keep the finished final matchup
+    // (including both distances) on the TV for 6 seconds before celebrating.
+    const latestResult = state.resultsLog && state.resultsLog[0];
+    const finalRoundIndex = state.bracket ? state.bracket.rounds.length - 1 : -1;
+    const isFreshFinalResult =
+      !!state.champion &&
+      latestResult &&
+      latestResult.ri === finalRoundIndex &&
+      typeof latestResult.ts === 'number';
+
+    const finalResultAge = isFreshFinalResult ? (Date.now() - latestResult.ts) : Infinity;
+    const CHAMPION_DELAY = 6000;
+    const waitingOnFinalResult = isFreshFinalResult && finalResultAge < CHAMPION_DELAY;
+
+    if(waitingOnFinalResult){
+      overlay.style.display = 'none';
+      lastChampionOverlayVisible = false;
+
+      const timerKey = latestResult.ri + '-' + latestResult.ts;
+      if(window.championDelayKey !== timerKey){
+        window.championDelayKey = timerKey;
+        clearTimeout(window.championDelayTimer);
+        window.championDelayTimer = setTimeout(() => {
+          renderChampionOverlay();
+        }, Math.max(0, CHAMPION_DELAY - finalResultAge));
+      }
+
+      renderChampionAdminControl();
+      return;
+    }
+
     const shouldShow = !!(state.champion && !state.championDismissed);
 
     if(shouldShow){
