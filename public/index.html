@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -47,570 +46,587 @@
     position:relative;
   }
 
-.bokeh{position; inset:0; z-index:0; pointer-events; overflow;}
-.brand-watermark{
-position; z-index:0; pointer-events;
-right:-4vw; bottom:-6vh; width:38vw; max-width:520px; height;
-opacity:.05; filter(.3);
-}
-.bokeh span{
-position; border-radius:50%;
-background(circle, rgba(255,222,89,0.16), rgba(255,222,89,0) 70%);
-filter(1px);
-animation 14s ease-in-out infinite;
-}
-@keyframes drift{
-0%,100%{transform(0) scale(1); opacity:.5;}
-50%{transform(-18px) scale(1.08); opacity:.9;}
-}
-@media (prefers-reduced-motion: reduce){ .bokeh span{animation;} }
+  .bokeh{position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden;}
+  .brand-watermark{
+    position:fixed; z-index:0; pointer-events:none;
+    right:-4vw; bottom:-6vh; width:38vw; max-width:520px; height:auto;
+    opacity:.05; filter:grayscale(.3);
+  }
+  .bokeh span{
+    position:absolute; border-radius:50%;
+    background:radial-gradient(circle, rgba(255,222,89,0.16), rgba(255,222,89,0) 70%);
+    filter:blur(1px);
+    animation:drift 14s ease-in-out infinite;
+  }
+  @keyframes drift{
+    0%,100%{transform:translateY(0) scale(1); opacity:.5;}
+    50%{transform:translateY(-18px) scale(1.08); opacity:.9;}
+  }
+  @media (prefers-reduced-motion: reduce){ .bokeh span{animation:none;} }
 
-.app{position; z-index:1; min-height:100vh; display; flex-direction;}
+  .app{position:relative; z-index:1; min-height:100vh; display:flex; flex-direction:column;}
 
-/* ---------- top bar ---------- */
-.topbar{
-display; align-items; justify-content; flex-wrap; gap:10px;
-padding:14px 24px;
-background(180deg, rgba(14,32,53,.95), rgba(14,32,53,.75));
-border-bottom:2px solid var(--turf-line);
-}
-.brand{display; align-items; gap:12px;}
-.brand-mark{
-width:40px; height; flex-shrink:0;
-filter(0 0 10px rgba(135,210,230,.5));
-animation 4s ease-in-out infinite;
-}
-@keyframes brandBob{0%,100%{transform(0);} 50%{transform(-2px);}}
-.brand-text{line-height:1;}
-.brand-text .l1{font-family(--font-cond); font-weight:700; letter-spacing:.14em; font-size:11px; color(--glow); text-transform;}
-.brand-text .l2{font-family(--font-display); font-size:20px; letter-spacing:.03em; color(--chalk); text-transform;}
+  /* ---------- top bar ---------- */
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;
+    padding:14px 24px;
+    background:linear-gradient(180deg, rgba(14,32,53,.95), rgba(14,32,53,.75));
+    border-bottom:2px solid var(--turf-line);
+  }
+  .brand{display:flex; align-items:center; gap:12px;}
+  .brand-mark{
+    width:40px; height:auto; flex-shrink:0;
+    filter:drop-shadow(0 0 10px rgba(135,210,230,.5));
+    animation:brandBob 4s ease-in-out infinite;
+  }
+  @keyframes brandBob{0%,100%{transform:translateY(0);} 50%{transform:translateY(-2px);}}
+  .brand-text{line-height:1;}
+  .brand-text .l1{font-family:var(--font-cond); font-weight:700; letter-spacing:.14em; font-size:11px; color:var(--glow); text-transform:uppercase;}
+  .brand-text .l2{font-family:var(--font-display); font-size:20px; letter-spacing:.03em; color:var(--chalk); text-transform:uppercase;}
 
-.live-badge{
-display; align-items; gap:8px;
-padding:6px 14px; border-radius:3px;
-background(--live); font-family(--font-cond); font-weight:700;
-letter-spacing:.12em; font-size:12px; text-transform;
-}
-.live-dot{width:8px; height:8px; border-radius:50%; background(--chalk); animation 1.4s ease-in-out infinite;}
-@keyframes pulse{0%,100%{opacity:1; transform(1);} 50%{opacity:.35; transform(.7);}}
+  .live-badge{
+    display:flex; align-items:center; gap:8px;
+    padding:6px 14px; border-radius:3px;
+    background:var(--live); font-family:var(--font-cond); font-weight:700;
+    letter-spacing:.12em; font-size:12px; text-transform:uppercase;
+  }
+  .live-dot{width:8px; height:8px; border-radius:50%; background:var(--chalk); animation:pulse 1.4s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:1; transform:scale(1);} 50%{opacity:.35; transform:scale(.7);}}
 
-.topbar-right{display; align-items; gap:14px; flex-wrap;}
-.event-meta{text-align; font-family(--font-cond);}
-.event-meta .ev-name{font-size:14px; font-weight:700; letter-spacing:.04em; text-transform; color(--chalk);}
-.event-meta .ev-date{font-size:11px; color(--steel); letter-spacing:.06em;}
+  .topbar-right{display:flex; align-items:center; gap:14px; flex-wrap:wrap;}
+  .event-meta{text-align:right; font-family:var(--font-cond);}
+  .event-meta .ev-name{font-size:14px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--chalk);}
+  .event-meta .ev-date{font-size:11px; color:var(--steel); letter-spacing:.06em;}
 
-.mode-toggle{
-background; border:1px solid var(--border); color(--steel);
-font-family(--font-cond); font-size:12px; letter-spacing:.1em; text-transform;
-padding:9px 14px; border-radius:3px; cursor; font-weight:600;
-transition .15s ease; min-height:40px;
-}
-.mode-toggle{border-color(--glow); color(--glow);}
+  .mode-toggle{
+    background:transparent; border:1px solid var(--border); color:var(--steel);
+    font-family:var(--font-cond); font-size:12px; letter-spacing:.1em; text-transform:uppercase;
+    padding:9px 14px; border-radius:3px; cursor:pointer; font-weight:600;
+    transition:all .15s ease; min-height:40px;
+  }
+  .mode-toggle:hover{border-color:var(--glow); color:var(--glow);}
 
-/* ============ DISPLAY VIEW ============ */
-#view-display{flex:1; display; flex-direction; min-width:0;}
+  /* ============ DISPLAY VIEW ============ */
+  #view-display{flex:1; display:flex; flex-direction:column; min-width:0;}
 
-.hole-head{
-display; align-items; justify-content; flex-wrap; gap:10px;
-padding:20px 28px 6px;
-}
-.hole-number{font-family(--font-display); font-size:56px; line-height:.8; color(--chalk); text-shadow:0 0 26px rgba(255,222,89,.18);}
-.hole-number sup{font-size:18px; vertical-align; color(--glow);}
-.hole-sub{font-family(--font-cond); font-size:13px; letter-spacing:.14em; text-transform; color(--steel); margin-left:12px;}
-.flight-arc{width:110px; height:42px; opacity:.85;}
+  .hole-head{
+    display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:10px;
+    padding:20px 28px 6px;
+  }
+  .hole-number{font-family:var(--font-display); font-size:56px; line-height:.8; color:var(--chalk); text-shadow:0 0 26px rgba(255,222,89,.18);}
+  .hole-number sup{font-size:18px; vertical-align:super; color:var(--glow);}
+  .hole-sub{font-family:var(--font-cond); font-size:13px; letter-spacing:.14em; text-transform:uppercase; color:var(--steel); margin-left:12px;}
+  .flight-arc{width:110px; height:42px; opacity:.85;}
 
-/* hero banner */
-.hero{
-margin:6px 28px 14px; border-radius:3px; position; overflow;
-background(--turf); border:1px solid var(--turf-line);
-padding:34px 28px; display; flex-direction; align-items; justify-content; gap:14px;
-min-height:220px;
-}
-.hero-round-big{
-font-family(--font-display); font-size:76px; line-height:.88; text-align;
-color(--glow); text-transform; letter-spacing:.02em;
-text-shadow:0 0 36px rgba(255,222,89,.4);
-}
-.hero-matchup{display; align-items; justify-content; gap:22px; flex-wrap;}
+  /* hero banner */
+  .hero{
+    margin:6px 28px 14px; border-radius:3px; position:relative; overflow:hidden;
+    background:var(--turf); border:1px solid var(--turf-line);
+    padding:34px 28px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px;
+    min-height:220px;
+  }
+  .hero-round-big{
+    font-family:var(--font-display); font-size:76px; line-height:.88; text-align:center;
+    color:var(--glow); text-transform:uppercase; letter-spacing:.02em;
+    text-shadow:0 0 36px rgba(255,222,89,.4);
+  }
+  .hero-matchup{display:flex; align-items:center; justify-content:center; gap:22px; flex-wrap:wrap;}
 
-/* Animated matchup intro */
+  /* Animated matchup intro */
 .hero-intro{
-overflow;
-animation .8s cubic-bezier(.2,.8,.2,1) both;
+  overflow:hidden;
+  animation:heroPanelIn .8s cubic-bezier(.2,.8,.2,1) both;
 }
 
 .hero-intro .hero-tag{
-animation .7s ease-out .2s both;
+  animation:heroTagIn .7s ease-out .2s both;
 }
 
 .hero-intro .hero-round-big{
-animation 1s cubic-bezier(.2,.9,.3,1.15) 1s both;
+  animation:heroRoundIn 1s cubic-bezier(.2,.9,.3,1.15) 1s both;
 }
 
 .hero-intro .hero-matchup{
-animation 1s cubic-bezier(.2,.8,.2,1) 4s both;
+  animation:heroMatchupIn 1s cubic-bezier(.2,.8,.2,1) 4s both;
 }
 
-.hero-intro .hero-name{
-animation .9s cubic-bezier(.2,.8,.2,1) 4s both;
+.hero-intro .hero-name:first-child{
+  animation:heroPlayerLeft .9s cubic-bezier(.2,.8,.2,1) 4s both;
 }
 
-.hero-intro .hero-name{
-animation .9s cubic-bezier(.2,.8,.2,1) 4s both;
+.hero-intro .hero-name:last-child{
+  animation:heroPlayerRight .9s cubic-bezier(.2,.8,.2,1) 4s both;
 }
 
 .hero-intro .hero-vs{
-animation .6s ease-out 4.6s both;
+  animation:heroVsIn .6s ease-out 4.6s both;
 }
 
 .hero-exit{
-animation 1.5s cubic-bezier(.4,0,.8,.2) forwards;
+  animation:heroPanelOut 1.5s cubic-bezier(.4,0,.8,.2) forwards;
 }
 
 .hero-hidden{
-display !important;
+  display:none !important;
 }
 
 @keyframes heroPanelIn{
-from{opacity:0; transform(-18px);}
-to{opacity:1; transform(0);}
+  from{opacity:0; transform:translateY(-18px);}
+  to{opacity:1; transform:translateY(0);}
 }
 
 @keyframes heroTagIn{
-from{opacity:0; transform(-18px);}
-to{opacity:1; transform(0);}
+  from{opacity:0; transform:translateX(-18px);}
+  to{opacity:1; transform:translateX(0);}
 }
 
 @keyframes heroRoundIn{
-from{
-opacity:0;
-transform(.82);
-letter-spacing:.12em;
-}
-to{
-opacity:1;
-transform(1);
-letter-spacing:.02em;
-}
+  from{
+    opacity:0;
+    transform:scale(.82);
+    letter-spacing:.12em;
+  }
+  to{
+    opacity:1;
+    transform:scale(1);
+    letter-spacing:.02em;
+  }
 }
 
 @keyframes heroMatchupIn{
-from{opacity:0;}
-to{opacity:1;}
+  from{opacity:0;}
+  to{opacity:1;}
 }
 
 @keyframes heroPlayerLeft{
-from{opacity:0; transform(-45px);}
-to{opacity:1; transform(0);}
+  from{opacity:0; transform:translateX(-45px);}
+  to{opacity:1; transform:translateX(0);}
 }
 
 @keyframes heroPlayerRight{
-from{opacity:0; transform(45px);}
-to{opacity:1; transform(0);}
+  from{opacity:0; transform:translateX(45px);}
+  to{opacity:1; transform:translateX(0);}
 }
 
 @keyframes heroVsIn{
-from{opacity:0; transform(.4);}
-to{opacity:1; transform(1);}
+  from{opacity:0; transform:scale(.4);}
+  to{opacity:1; transform:scale(1);}
 }
 
 @keyframes heroPanelOut{
-0%{
-opacity:1;
-transform(0);
-max-height:500px;
-}
-60%{
-opacity:0;
-transform(-18px);
-}
-100%{
-opacity:0;
-transform(-18px);
-max-height:0;
-margin-top:0;
-margin-bottom:0;
-padding-top:0;
-padding-bottom:0;
-}
+  0%{
+    opacity:1;
+    transform:translateY(0);
+    max-height:500px;
+  }
+  60%{
+    opacity:0;
+    transform:translateY(-18px);
+  }
+  100%{
+    opacity:0;
+    transform:translateY(-18px);
+    max-height:0;
+    margin-top:0;
+    margin-bottom:0;
+    padding-top:0;
+    padding-bottom:0;
+  }
 }
 
-/* up-next heads-up banner */
-.hole-info{
-display;
-align-items;
-min-width:0;
+  /* up-next heads-up banner */
+  .hole-info{
+  display:flex;
+  align-items:baseline;
+  min-width:0;
 }
 
 .hole-head-right{
-display;
-align-items;
-justify-content;
-gap:22px;
-margin-left;
-min-width:0;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:22px;
+  margin-left:auto;
+  min-width:0;
 }
 
 .up-next-banner{
-margin:0;
-padding:8px 16px;
-border-radius:3px;
-background;
-border:0;
-display;
-align-items;
-justify-content;
-gap:14px;
-flex-wrap;
-animation .55s cubic-bezier(.25,.9,.4,1.2) both;
+  margin:0;
+  padding:8px 16px;
+  border-radius:3px;
+  background:transparent;
+  border:0;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:14px;
+  flex-wrap:wrap;
+  animation:upNextIn .55s cubic-bezier(.25,.9,.4,1.2) both;
 }
 
 @keyframes upNextIn{
-0%{
-transform(24px);
-opacity:0;
+  0%{
+    transform:translateX(24px);
+    opacity:0;
+  }
+  100%{
+    transform:translateX(0);
+    opacity:1;
+  }
 }
-100%{
-transform(0);
-opacity:1;
-}
-}
-.un-tag{
-font-family(--font-cond); font-weight:800; letter-spacing:.14em; text-transform; font-size:12px;
-color(--glow); background(255,222,89,.12); border:1px solid rgba(255,222,89,.45);
-padding:5px 12px; border-radius:20px; flex-shrink:0;
-animation 1.8s ease-in-out infinite;
-}
-@keyframes unPulse{
-0%,100%{ box-shadow:0 0 0 0 rgba(255,222,89,.35); }
-50%{ box-shadow:0 0 0 7px rgba(255,222,89,0); }
-}
-.un-round{font-family(--font-cond); font-size:12px; letter-spacing:.08em; text-transform; color(--steel-dim); flex-shrink:0;}
-.un-names{font-family(--font-cond); font-weight:700; font-size:17px; color(--chalk); letter-spacing:.02em; text-transform;}
-.un-names b{color(--glow); font-weight:800;}
-.hero.champion-hero{
-background(120deg, rgba(240,168,58,.22), rgba(240,168,58,.05) 60%);
-border-color(--gold-dim);
-}
-.hero.empty-hero{justify-content; color(--steel); font-family(--font-cond); letter-spacing:.08em; text-transform; font-size:14px;}
-.hero-tag{
-position; top:10px; left:14px; font-family(--font-cond); font-size:11px; letter-spacing:.14em;
-text-transform; color(--glow); font-weight:700;
-}
-.hero.champion-hero .hero-tag{color(--gold);}
-.hero-name{font-family(--font-display); font-size:38px; text-transform; color(--chalk); letter-spacing:.01em;}
-.hero.champion-hero .hero-name{color(--gold); text-shadow:0 0 24px rgba(240,168,58,.55); font-size:48px;}
-.hero-vs{font-family(--font-cond); font-weight:800; font-size:18px; color(--steel); letter-spacing:.1em; padding:0 4px;}
-.hero-trophy{width:52px; height:52px; flex-shrink:0;}
-@keyframes goldSweep{0%{background-position:-200% 0;} 100%{background-position:200% 0;}}
-.hero.champion-hero::after{
-content:''; position; inset:0; pointer-events;
-background(100deg, transparent 30%, rgba(255,255,255,.16) 45%, transparent 60%);
-background-size:200% 100%;
-animation 3.2s ease-in-out infinite;
-}
+  .un-tag{
+    font-family:var(--font-cond); font-weight:800; letter-spacing:.14em; text-transform:uppercase; font-size:12px;
+    color:var(--glow); background:rgba(255,222,89,.12); border:1px solid rgba(255,222,89,.45);
+    padding:5px 12px; border-radius:20px; flex-shrink:0;
+    animation:unPulse 1.8s ease-in-out infinite;
+  }
+  @keyframes unPulse{
+    0%,100%{ box-shadow:0 0 0 0 rgba(255,222,89,.35); }
+    50%{ box-shadow:0 0 0 7px rgba(255,222,89,0); }
+  }
+  .un-round{font-family:var(--font-cond); font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--steel-dim); flex-shrink:0;}
+  .un-names{font-family:var(--font-cond); font-weight:700; font-size:17px; color:var(--chalk); letter-spacing:.02em; text-transform:uppercase;}
+  .un-names b{color:var(--glow); font-weight:800;}
+  .hero.champion-hero{
+    background:linear-gradient(120deg, rgba(240,168,58,.22), rgba(240,168,58,.05) 60%);
+    border-color:var(--gold-dim);
+  }
+  .hero.empty-hero{justify-content:center; color:var(--steel); font-family:var(--font-cond); letter-spacing:.08em; text-transform:uppercase; font-size:14px;}
+  .hero-tag{
+    position:absolute; top:10px; left:14px; font-family:var(--font-cond); font-size:11px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--glow); font-weight:700;
+  }
+  .hero.champion-hero .hero-tag{color:var(--gold);}
+  .hero-name{font-family:var(--font-display); font-size:38px; text-transform:uppercase; color:var(--chalk); letter-spacing:.01em;}
+  .hero.champion-hero .hero-name{color:var(--gold); text-shadow:0 0 24px rgba(240,168,58,.55); font-size:48px;}
+  .hero-vs{font-family:var(--font-cond); font-weight:800; font-size:18px; color:var(--steel); letter-spacing:.1em; padding:0 4px;}
+  .hero-trophy{width:52px; height:52px; flex-shrink:0;}
+  @keyframes goldSweep{0%{background-position:-200% 0;} 100%{background-position:200% 0;}}
+  .hero.champion-hero::after{
+    content:''; position:absolute; inset:0; pointer-events:none;
+    background:linear-gradient(100deg, transparent 30%, rgba(255,255,255,.16) 45%, transparent 60%);
+    background-size:200% 100%;
+    animation:goldSweep 3.2s ease-in-out infinite;
+  }
 
-/* champion overlay — full-screen, locked dead-center, for the moment the tournament ends /
-/ boot loading splash */
-.boot-loading{
-position; inset:0; z-index:400; display; flex-direction; align-items; justify-content; gap:16px;
-background(--night); transition .4s ease;
-}
-.boot-loading img{width:90px; height; animation 1.1s ease-in-out infinite; filter(0 0 18px rgba(135,210,230,.5));}
-.boot-loading .bl-text{font-family(--font-cond); letter-spacing:.14em; text-transform; font-size:13px; color(--steel);}
-@keyframes pineappleBounce{
-0%,100%{ transform(0) scale(1); }
-50%{ transform(-14px) scale(1.04); }
-}
+  /* champion overlay — full-screen, locked dead-center, for the moment the tournament ends */
+  /* boot loading splash */
+  .boot-loading{
+    position:fixed; inset:0; z-index:400; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px;
+    background:var(--night); transition:opacity .4s ease;
+  }
+  .boot-loading img{width:90px; height:auto; animation:pineappleBounce 1.1s ease-in-out infinite; filter:drop-shadow(0 0 18px rgba(135,210,230,.5));}
+  .boot-loading .bl-text{font-family:var(--font-cond); letter-spacing:.14em; text-transform:uppercase; font-size:13px; color:var(--steel);}
+  @keyframes pineappleBounce{
+    0%,100%{ transform:translateY(0) scale(1); }
+    50%{ transform:translateY(-14px) scale(1.04); }
+  }
 
-.champion-overlay{
-position; inset:0; z-index:200; display; justify-content;
-background(circle at 50% 42%, rgba(240,168,58,.22), rgba(6,12,22,.98) 65%), var(--night);
-overflow-y; overflow-x;
-}
-.confetti-field{position; inset:0; pointer-events; z-index:1;}
-.confetti-piece{
-position; top:-24px; border-radius:1px; opacity:.9;
-animation-name; animation-timing-function; animation-iteration-count;
-}
-@keyframes confettiFall{
-0%{ transform(-10vh) rotate(0deg); opacity:1; }
-100%{ transform(112vh) rotate(360deg); opacity:.85; }
-}
-.champ-inner{
-position; z-index:2; display; flex-direction; align-items; gap:16px;
-text-align; padding:28px 20px; margin; animation .8s cubic-bezier(.22,.9,.32,1.35) both;
-}
-@keyframes champIn{
-0%{ transform(.55); opacity:0; }
-60%{ transform(1.1); opacity:1; }
-100%{ transform(1); opacity:1; }
-}
-.champ-trophy{width:150px; height; filter(0 0 26px rgba(240,168,58,.7)); animation 2.6s ease-in-out infinite;}
-.champ-watermark{
-position; z-index:0; pointer-events; top:50%; left:50%;
-width(70vw, 900px); height; transform(-50%,-50%);
-opacity:.06;
-}
-@keyframes trophyBob{0%,100%{transform(0);} 50%{transform(-9px);}}
-.champ-tag{font-family(--font-cond); letter-spacing:.24em; text-transform; color(--gold); font-size:18px; font-weight:700;}
-.champ-name{
-font-family(--font-display); font-size(52px, 11vw, 150px); line-height:.9; color(--gold);
-text-transform; letter-spacing:.01em; text-shadow:0 0 50px rgba(240,168,58,.65);
-}
-.champ-sub{font-family(--font-cond); letter-spacing:.1em; text-transform; color(--steel); font-size:16px;}
-.champ-exit-btn{
-position; top:20px; right:24px; z-index:4;
-background; border:1px solid rgba(244,246,248,.35); color(--chalk);
-font-family(--font-cond); letter-spacing:.08em; text-transform; font-size:12px;
-padding:9px 16px; border-radius:3px; cursor; transition .15s ease;
-}
-.champ-exit-btn{border-color(--gold); color(--gold);}
-.champ-recap{
-display; flex-direction; gap:8px; margin-top:8px;
-background(0,0,0,.28); border:1px solid rgba(240,168,58,.35); border-radius:6px;
-padding:14px 26px; min-width:300px;
-}
-.champ-recap-title{font-family(--font-cond); letter-spacing:.14em; text-transform; font-size:12px; color(--steel); text-align; margin-bottom:2px;}
-.champ-recap-row{display; align-items; gap:14px; font-family(--font-body); font-size:17px; font-weight:700; color(--chalk);}
-.champ-recap-row .cr-rank{font-family(--font-display); font-size:18px; color(--gold); width:22px; flex-shrink:0;}
-.champ-recap-row .cr-name{flex:1; text-align; overflow; text-overflow; white-space;}
-.champ-recap-row .cr-dist{font-family(--font-mono); color(--glow); font-weight:800; flex-shrink:0;}
+  .champion-overlay{
+    position:fixed; inset:0; z-index:200; display:flex; justify-content:center;
+    background:radial-gradient(circle at 50% 42%, rgba(240,168,58,.22), rgba(6,12,22,.98) 65%), var(--night);
+    overflow-y:auto; overflow-x:hidden;
+  }
+  .confetti-field{position:fixed; inset:0; pointer-events:none; z-index:1;}
+  .confetti-piece{
+    position:absolute; top:-24px; border-radius:1px; opacity:.9;
+    animation-name:confettiFall; animation-timing-function:linear; animation-iteration-count:infinite;
+  }
+  @keyframes confettiFall{
+    0%{ transform:translateY(-10vh) rotate(0deg); opacity:1; }
+    100%{ transform:translateY(112vh) rotate(360deg); opacity:.85; }
+  }
+  .champ-inner{
+    position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; gap:16px;
+    text-align:center; padding:28px 20px; margin:auto; animation:champIn .8s cubic-bezier(.22,.9,.32,1.35) both;
+  }
+  @keyframes champIn{
+    0%{ transform:scale(.55); opacity:0; }
+    60%{ transform:scale(1.1); opacity:1; }
+    100%{ transform:scale(1); opacity:1; }
+  }
+  .champ-trophy{width:150px; height:auto; filter:drop-shadow(0 0 26px rgba(240,168,58,.7)); animation:trophyBob 2.6s ease-in-out infinite;}
+  .champ-watermark{
+    position:absolute; z-index:0; pointer-events:none; top:50%; left:50%;
+    width:min(70vw, 900px); height:auto; transform:translate(-50%,-50%);
+    opacity:.06;
+  }
+  @keyframes trophyBob{0%,100%{transform:translateY(0);} 50%{transform:translateY(-9px);}}
+  .champ-tag{font-family:var(--font-cond); letter-spacing:.24em; text-transform:uppercase; color:var(--gold); font-size:18px; font-weight:700;}
+  .champ-name{
+    font-family:var(--font-display); font-size:clamp(52px, 11vw, 150px); line-height:.9; color:var(--gold);
+    text-transform:uppercase; letter-spacing:.01em; text-shadow:0 0 50px rgba(240,168,58,.65);
+  }
+  .champ-sub{font-family:var(--font-cond); letter-spacing:.1em; text-transform:uppercase; color:var(--steel); font-size:16px;}
+  .champ-exit-btn{
+    position:absolute; top:20px; right:24px; z-index:4;
+    background:transparent; border:1px solid rgba(244,246,248,.35); color:var(--chalk);
+    font-family:var(--font-cond); letter-spacing:.08em; text-transform:uppercase; font-size:12px;
+    padding:9px 16px; border-radius:3px; cursor:pointer; transition:all .15s ease;
+  }
+  .champ-exit-btn:hover{border-color:var(--gold); color:var(--gold);}
+  .champ-recap{
+    display:none; flex-direction:column; gap:8px; margin-top:8px;
+    background:rgba(0,0,0,.28); border:1px solid rgba(240,168,58,.35); border-radius:6px;
+    padding:14px 26px; min-width:300px;
+  }
+  .champ-recap-title{font-family:var(--font-cond); letter-spacing:.14em; text-transform:uppercase; font-size:12px; color:var(--steel); text-align:center; margin-bottom:2px;}
+  .champ-recap-row{display:flex; align-items:center; gap:14px; font-family:var(--font-body); font-size:17px; font-weight:700; color:var(--chalk);}
+  .champ-recap-row .cr-rank{font-family:var(--font-display); font-size:18px; color:var(--gold); width:22px; flex-shrink:0;}
+  .champ-recap-row .cr-name{flex:1; text-align:left; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .champ-recap-row .cr-dist{font-family:var(--font-mono); color:var(--glow); font-weight:800; flex-shrink:0;}
 
-/* bracket tree */
-.bracket-scroll{flex:1;
-min-height:0;
-min-width:0;
-overflow;
-padding:18px 28px 60px;
-display;
-align-items;
-justify-content;
-overscroll-behavior;
+  /* bracket tree */
+  .bracket-scroll{flex:1;
+  min-height:0;
+  min-width:0;
+  overflow:hidden;
+  padding:0 28px 60px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
-body.tv-mode{
-overflow;
+  body.tv-mode{
+  overflow:hidden;
 }
 
 body.tv-mode .app{
-height:100dvh;
-min-height:0;
-overflow;
+  height:100dvh;
+  min-height:0;
+  overflow:hidden;
 }
 
 body.tv-mode #view-display{
-flex:1;
-min-height:0;
-overflow;
+  flex:1;
+  min-height:0;
+  overflow:hidden;
 }
 
 body.tv-mode .hole-head,
 body.tv-mode .hero{
-flex-shrink:0;
+  flex-shrink:0;
 }
 
 body.tv-mode .hole-head{
-padding:12px 28px 8px;
-align-items;
+  padding:12px 28px 8px;
+  align-items:center;
 }
 
 body.tv-mode .bracket-scroll{
-flex:1;
-min-height:0;
-overflow;
-padding-bottom:52px;
+  flex:1;
+  min-height:0;
+  overflow:hidden;
+  padding-bottom:52px;
 }
-.bracket-wrap{
-position;
-min-height:100px;
-flex;
-margin:0 auto;
-transition .35s ease;
-transform-origin left;
-will-change;
+ .bracket-wrap{
+  position:relative;
+  min-height:100px;
+  transition:transform .9s cubic-bezier(.2,.8,.2,1);
+  transform-origin:center center;
+  will-change:transform;
 }
-.bracket-wrap svg{position; top:0; left:0; overflow;}
-.round-col-label{
-position; top:-24px; width:230px; text-align;
-font-family(--font-cond); font-size:12px; letter-spacing:.12em;
-text-transform; color(--steel-dim);
-}
-.match-box{
-position; background(--panel); border:1px solid var(--border); border-radius:3px;
-padding:8px 12px; display; flex-direction; justify-content; gap:3px;
-font-family(--font-body); font-size:17px;
+  .round-collapse-out{
+  opacity:0;
+  transform:scale(.96) translateX(-18px) !important;
+  transition:
+    opacity .9s ease,
+    transform .9s cubic-bezier(.4,0,.2,1) !important;
 }
 
-.match-box.live{border-color(--glow); box-shadow:0 0 0 1px rgba(255,222,89,.25), 0 0 14px rgba(255,222,89,.25); animation 1.8s ease-in-out infinite;}
-@keyframes liveGlow{0%,100%{box-shadow:0 0 0 1px rgba(255,222,89,.25), 0 0 10px rgba(255,222,89,.2);} 50%{box-shadow:0 0 0 1px rgba(255,222,89,.5), 0 0 20px rgba(255,222,89,.45);}}
-.match-box .mb-side{display; align-items; justify-content; gap:8px; padding:2px 0; color(--steel); font-weight:700;}
-.match-box .mb-side.winner{color(--gold); font-weight:800;}
-.match-box .mb-side .mb-name{white-space; overflow; text-overflow; max-width:175px;}
-.match-box .mb-side .mb-dist{font-family(--font-mono); font-size:13px; font-weight:800; flex-shrink:0;}
-.match-box.bye .mb-side{color(--steel-dim); font-style; font-weight:600;}
-.match-box.tbd{align-items; justify-content; color(--steel-dim); font-family(--font-cond); letter-spacing:.06em; text-transform; font-size:12px;}
-@keyframes scorePop{
-0%{ transform(1); box-shadow; }
-18%{ transform(1.16); box-shadow:0 0 0 2px var(--gold), 0 0 28px rgba(240,168,58,.85); }
-45%{ transform(.96); box-shadow:0 0 0 2px var(--gold), 0 0 18px rgba(240,168,58,.5); }
-65%{ transform(1.06); box-shadow:0 0 0 2px var(--gold), 0 0 22px rgba(240,168,58,.6); }
-100%{ transform(1); box-shadow; }
+.round-collapse-in{
+  animation:roundCollapseIn .9s cubic-bezier(.2,.8,.2,1) both;
 }
-.match-box.score-pop{ animation 1.15s cubic-bezier(.34,1.56,.64,1) 1; z-index:5; }
 
-/* ticker — fixed to the viewport bottom so it never drifts, regardless of scroll */
-.ticker-wrap{
-border-top:2px solid var(--turf-line); background(--panel-2);
-display; align-items; overflow; height:50px; position;
-left:0; right:0; bottom:0; z-index:50;
+@keyframes roundCollapseIn{
+  from{
+    opacity:0;
+    transform:scale(.94) translateX(20px);
+  }
+  to{
+    opacity:1;
+  }
 }
-.ticker-label{
-background(--glow); color:#101b0c; font-family(--font-cond); font-weight:800;
-font-size:13px; letter-spacing:.1em; display; align-items; padding:0 18px;
-text-transform; flex-shrink:0; position; z-index:2;
-clip-path(0 0, 100% 0, 88% 100%, 0% 100%); padding-right:34px;
-}
-.ticker-track{
-flex:1; display; align-items; overflow; position;
--webkit-mask-image(90deg, transparent 0, black 40px, black calc(100% - 40px), transparent 100%);
-mask-image(90deg, transparent 0, black 40px, black calc(100% - 40px), transparent 100%);
-}
-.ticker-track::before{
-content:''; position; inset:0; z-index:3; pointer-events;
-background(100deg, transparent 40%, rgba(255,222,89,.14) 50%, transparent 60%);
-background-size:60% 100%; background-repeat;
-animation 5s linear infinite;
-}
-@keyframes tickerShimmer{0%{background-position:-120% 0;} 100%{background-position:220% 0;}}
-.ticker-inner{display; gap:0; white-space; animation 55s linear infinite; padding-left:100%;}
-.ticker-item{
-font-family(--font-cond); font-size:14px; letter-spacing:.03em; color(--chalk);
-display; gap:10px; align-items; padding:0 22px;
-}
-.ticker-item b{color(--glow); font-weight:700;}
-.ticker-item .ti-dist{font-family(--font-mono); color(--gold);}
-.ticker-item .ti-round{color(--steel-dim); font-size:11px; letter-spacing:.08em;}
-.ticker-ball{
-width:9px; height:9px; border-radius:50%;
-background(circle at 35% 30%, #fff, var(--chalk));
-box-shadow:0 0 8px 1px rgba(255,222,89,.7); flex-shrink:0;
-animation 1.6s ease-in-out infinite;
-}
-@keyframes ballRoll{0%,100%{transform(0) rotate(0deg);} 50%{transform(-3px) rotate(180deg);}}
-.ti-new{
-background(--gold); color:#241c05; font-family(--font-cond); font-weight:800; font-size:10px;
-letter-spacing:.08em; padding:2px 7px; border-radius:2px; text-transform;
-animation 1.1s ease-in-out infinite;
-}
-@keyframes newFlash{0%,100%{opacity:1;} 50%{opacity:.45;}}
-@keyframes scroll-left{from{transform(0);} to{transform(-100%);}}
+  .bracket-wrap svg{position:absolute; top:0; left:0; overflow:visible;}
+  .round-col-label{
+    position:absolute; top:-26px; font-family:var(--font-cond); font-size:11px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--steel-dim);
+  }
+  .match-box{
+    position:absolute; background:var(--panel); border:1px solid var(--border); border-radius:3px;
+    padding:8px 12px; display:flex; flex-direction:column; justify-content:center; gap:3px;
+    font-family:var(--font-body); font-size:16px;
+  }
 
-/* ============ ADMIN VIEW ============ */
-#view-admin{flex:1; padding:20px; max-width:900px; width:100%; margin:0 auto;}
-.admin-grid{display; grid-template-columns:1fr; gap:16px;}
-.card{background(--panel); border:1px solid var(--border); border-radius:4px; padding:18px;}
-.card h2{
-font-family(--font-cond); font-size:13px; letter-spacing:.12em; text-transform;
-color(--glow); margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid var(--border);
-display; align-items; justify-content; gap:10px;
-}
-.count-pill{
-background(--night-2); border:1px solid var(--border); color(--steel);
-font-size:11px; padding:3px 9px; border-radius:20px; letter-spacing:.04em; font-family(--font-body); font-weight:600;
-}
-.field-row{display; gap:10px; flex-wrap; align-items;}
-.field{display; flex-direction; gap:6px; flex:1; min-width:120px;}
-.field label{font-family(--font-cond); font-size:11px; letter-spacing:.08em; text-transform; color(--steel);}
-.field input, .field select{
-background(--night-2); border:1px solid var(--border); color(--chalk);
-padding:12px 12px; border-radius:3px; font-family(--font-body); font-size:16px; min-height:44px;
-}
-.field input, .field select{outline; border-color(--glow);}
-.btn{
-font-family(--font-cond); font-weight:700; letter-spacing:.08em; text-transform;
-font-size:13px; padding:12px 20px; border-radius:3px; border; cursor;
-background(--glow); color:#101b0c; transition .1s ease, opacity .15s ease;
-min-height:44px;
-}
-.btn{opacity:.9;}
-.btn{transform(.97);}
-.btn.secondary{background; border:1px solid var(--border); color(--steel);}
-.btn.secondary{border-color(--glow); color(--glow);}
-.btn.danger{background; border:1px solid var(--live); color(--live);}
-.btn.danger{background(--live); color(--chalk);}
-.btn.small{padding:9px 12px; font-size:12px; min-height:38px;}
-.btn{opacity:.35; cursor;}
 
-.chip-list{display; flex-wrap; gap:8px; margin-top:4px;}
-.chip{
-display; align-items; gap:8px; background(--night-2); border:1px solid var(--border);
-padding:8px 10px 8px 14px; border-radius:20px; font-size:14px; font-family(--font-body);
-}
-.chip button{background; border; color(--steel); cursor; font-size:16px; line-height:1; padding:4px;}
-.chip button{color(--live);}
+  .match-box.live{border-color:var(--glow); box-shadow:0 0 0 1px rgba(255,222,89,.25), 0 0 14px rgba(255,222,89,.25); animation:liveGlow 1.8s ease-in-out infinite;}
+  @keyframes liveGlow{0%,100%{box-shadow:0 0 0 1px rgba(255,222,89,.25), 0 0 10px rgba(255,222,89,.2);} 50%{box-shadow:0 0 0 1px rgba(255,222,89,.5), 0 0 20px rgba(255,222,89,.45);}}
+  .match-box .mb-side{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:2px 0; color:var(--steel); font-weight:700;}
+  .match-box .mb-side.winner{color:var(--gold); font-weight:800;}
+  .match-box .mb-side .mb-name{white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:140px;}
+  .match-box .mb-side .mb-dist{font-family:var(--font-mono); font-size:13px; font-weight:800; flex-shrink:0;}
+  .match-box.bye .mb-side{color:var(--steel-dim); font-style:italic; font-weight:600;}
+  .match-box.tbd{align-items:center; justify-content:center; color:var(--steel-dim); font-family:var(--font-cond); letter-spacing:.06em; text-transform:uppercase; font-size:12px;}
+  @keyframes scorePop{
+    0%{ transform:scale(1); box-shadow:none; }
+    18%{ transform:scale(1.16); box-shadow:0 0 0 2px var(--gold), 0 0 28px rgba(240,168,58,.85); }
+    45%{ transform:scale(.96); box-shadow:0 0 0 2px var(--gold), 0 0 18px rgba(240,168,58,.5); }
+    65%{ transform:scale(1.06); box-shadow:0 0 0 2px var(--gold), 0 0 22px rgba(240,168,58,.6); }
+    100%{ transform:scale(1); box-shadow:none; }
+  }
+  .match-box.score-pop{ animation:scorePop 1.15s cubic-bezier(.34,1.56,.64,1) 1; z-index:5; }
 
-.hint{font-size:12px; color(--steel-dim); margin-top:10px; line-height:1.5;}
-.status-line{font-size:12px; color(--steel); font-family(--font-cond); letter-spacing:.04em; min-height:16px; margin-top:8px;}
-.status-line.ok{color(--glow);}
-.status-line.err{color(--live);}
+  /* ticker — fixed to the viewport bottom so it never drifts, regardless of scroll */
+  .ticker-wrap{
+    border-top:2px solid var(--turf-line); background:var(--panel-2);
+    display:flex; align-items:stretch; overflow:hidden; height:50px; position:fixed;
+    left:0; right:0; bottom:0; z-index:50;
+  }
+  .ticker-label{
+    background:var(--glow); color:#101b0c; font-family:var(--font-cond); font-weight:800;
+    font-size:13px; letter-spacing:.1em; display:flex; align-items:center; padding:0 18px;
+    text-transform:uppercase; flex-shrink:0; position:relative; z-index:2;
+    clip-path:polygon(0 0, 100% 0, 88% 100%, 0% 100%); padding-right:34px;
+  }
+  .ticker-track{
+    flex:1; display:flex; align-items:center; overflow:hidden; position:relative;
+    -webkit-mask-image:linear-gradient(90deg, transparent 0, black 40px, black calc(100% - 40px), transparent 100%);
+    mask-image:linear-gradient(90deg, transparent 0, black 40px, black calc(100% - 40px), transparent 100%);
+  }
+  .ticker-track::before{
+    content:''; position:absolute; inset:0; z-index:3; pointer-events:none;
+    background:linear-gradient(100deg, transparent 40%, rgba(255,222,89,.14) 50%, transparent 60%);
+    background-size:60% 100%; background-repeat:no-repeat;
+    animation:tickerShimmer 5s linear infinite;
+  }
+  @keyframes tickerShimmer{0%{background-position:-120% 0;} 100%{background-position:220% 0;}}
+  .ticker-inner{display:flex; gap:0; white-space:nowrap; animation:scroll-left 55s linear infinite; padding-left:100%;}
+  .ticker-item{
+    font-family:var(--font-cond); font-size:14px; letter-spacing:.03em; color:var(--chalk);
+    display:flex; gap:10px; align-items:center; padding:0 22px;
+  }
+  .ticker-item b{color:var(--glow); font-weight:700;}
+  .ticker-item .ti-dist{font-family:var(--font-mono); color:var(--gold);}
+  .ticker-item .ti-round{color:var(--steel-dim); font-size:11px; letter-spacing:.08em;}
+  .ticker-ball{
+    width:9px; height:9px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #fff, var(--chalk));
+    box-shadow:0 0 8px 1px rgba(255,222,89,.7); flex-shrink:0;
+    animation:ballRoll 1.6s ease-in-out infinite;
+  }
+  @keyframes ballRoll{0%,100%{transform:translateY(0) rotate(0deg);} 50%{transform:translateY(-3px) rotate(180deg);}}
+  .ti-new{
+    background:var(--gold); color:#241c05; font-family:var(--font-cond); font-weight:800; font-size:10px;
+    letter-spacing:.08em; padding:2px 7px; border-radius:2px; text-transform:uppercase;
+    animation:newFlash 1.1s ease-in-out infinite;
+  }
+  @keyframes newFlash{0%,100%{opacity:1;} 50%{opacity:.45;}}
+  @keyframes scroll-left{from{transform:translateX(0);} to{transform:translateX(-100%);}}
 
-.round-group{margin-bottom:18px;}
-.round-group-title{
-font-family(--font-cond); font-size:12px; letter-spacing:.12em; text-transform;
-color(--steel); margin-bottom:10px; padding-left:2px;
-}
-.match-card{
-background(--night-2); border:1px solid var(--border); border-radius:4px; padding:14px; margin-bottom:10px;
-}
-.match-card.ready{border-color(--glow);}
-.match-card.done{border-color(--gold-dim);}
-.mc-label{
-font-family(--font-cond); font-size:11px; letter-spacing:.08em; text-transform;
-color(--steel-dim); margin-bottom:10px; display; align-items; gap:8px;
-}
-.mc-live{background(--glow); color:#101b0c; padding:2px 8px; border-radius:10px; font-weight:700;}
-.mc-bye, .mc-pending{font-size:13px; color(--steel); font-style;}
-.match-side{
-display; align-items; gap:8px; flex-wrap; padding:8px 0;
-}
-.mc-name{flex:1; min-width:90px; font-size:15px; font-weight:600; color(--chalk);}
-.match-side .ft-input, .match-side .in-input{
-width:64px; background(--night); border:1px solid var(--border); color(--chalk);
-padding:9px 8px; border-radius:3px; font-family(--font-mono); font-size:14px; min-height:40px;
-}
-.mc-vs{
-text-align; font-family(--font-cond); font-size:11px; letter-spacing:.1em; color(--steel-dim);
-padding:2px 0;
-}
-.mc-side-done{display; align-items; justify-content; padding:6px 0; font-size:14px; color(--steel);}
-.mc-side-done.won{color(--gold); font-weight:700;}
-.mc-side-done .mc-dist{font-family(--font-mono); font-size:13px;}
+  /* ============ ADMIN VIEW ============ */
+  #view-admin{flex:1; padding:20px; max-width:900px; width:100%; margin:0 auto;}
+  .admin-grid{display:grid; grid-template-columns:1fr; gap:16px;}
+  .card{background:var(--panel); border:1px solid var(--border); border-radius:4px; padding:18px;}
+  .card h2{
+    font-family:var(--font-cond); font-size:13px; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--glow); margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+  }
+  .count-pill{
+    background:var(--night-2); border:1px solid var(--border); color:var(--steel);
+    font-size:11px; padding:3px 9px; border-radius:20px; letter-spacing:.04em; font-family:var(--font-body); font-weight:600;
+  }
+  .field-row{display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;}
+  .field{display:flex; flex-direction:column; gap:6px; flex:1; min-width:120px;}
+  .field label{font-family:var(--font-cond); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--steel);}
+  .field input, .field select{
+    background:var(--night-2); border:1px solid var(--border); color:var(--chalk);
+    padding:12px 12px; border-radius:3px; font-family:var(--font-body); font-size:16px; min-height:44px;
+  }
+  .field input:focus, .field select:focus{outline:none; border-color:var(--glow);}
+  .btn{
+    font-family:var(--font-cond); font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+    font-size:13px; padding:12px 20px; border-radius:3px; border:none; cursor:pointer;
+    background:var(--glow); color:#101b0c; transition:transform .1s ease, opacity .15s ease;
+    min-height:44px;
+  }
+  .btn:hover{opacity:.9;}
+  .btn:active{transform:scale(.97);}
+  .btn.secondary{background:transparent; border:1px solid var(--border); color:var(--steel);}
+  .btn.secondary:hover{border-color:var(--glow); color:var(--glow);}
+  .btn.danger{background:transparent; border:1px solid var(--live); color:var(--live);}
+  .btn.danger:hover{background:var(--live); color:var(--chalk);}
+  .btn.small{padding:9px 12px; font-size:12px; min-height:38px;}
+  .btn:disabled{opacity:.35; cursor:not-allowed;}
 
-select#hole-select{min-width:160px;}
+  .chip-list{display:flex; flex-wrap:wrap; gap:8px; margin-top:4px;}
+  .chip{
+    display:flex; align-items:center; gap:8px; background:var(--night-2); border:1px solid var(--border);
+    padding:8px 10px 8px 14px; border-radius:20px; font-size:14px; font-family:var(--font-body);
+  }
+  .chip button{background:none; border:none; color:var(--steel); cursor:pointer; font-size:16px; line-height:1; padding:4px;}
+  .chip button:hover{color:var(--live);}
 
-::-webkit-scrollbar{width:8px; height:8px;}
-::-webkit-scrollbar-track{background(--night-2);}
-::-webkit-scrollbar-thumb{background(--turf-line); border-radius:4px;}
+  .hint{font-size:12px; color:var(--steel-dim); margin-top:10px; line-height:1.5;}
+  .status-line{font-size:12px; color:var(--steel); font-family:var(--font-cond); letter-spacing:.04em; min-height:16px; margin-top:8px;}
+  .status-line.ok{color:var(--glow);}
+  .status-line.err{color:var(--live);}
 
-@media (max-width: 640px){
-.topbar{padding:12px 14px;}
-.brand-text .l1{display;}
-.event-meta{display;}
-.field-row{flex-direction; align-items;}
-.field{width:100%;}
-.field-row > .btn{width:100%;}
-#view-admin{padding:14px;}
-.card{padding:14px;}
-.hero-name{font-size:24px;}
-.hero.champion-hero .hero-name{font-size:30px;}
-.hero-round-big{font-size:44px;}
-.hole-number{font-size:40px;}
-.match-side{justify-content;}
-.mc-name{width:100%; order:0;}
-.match-side .ft-input, .match-side .in-input{width:58px;}
-}
+  .round-group{margin-bottom:18px;}
+  .round-group-title{
+    font-family:var(--font-cond); font-size:12px; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--steel); margin-bottom:10px; padding-left:2px;
+  }
+  .match-card{
+    background:var(--night-2); border:1px solid var(--border); border-radius:4px; padding:14px; margin-bottom:10px;
+  }
+  .match-card.ready{border-color:var(--glow);}
+  .match-card.done{border-color:var(--gold-dim);}
+  .mc-label{
+    font-family:var(--font-cond); font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--steel-dim); margin-bottom:10px; display:flex; align-items:center; gap:8px;
+  }
+  .mc-live{background:var(--glow); color:#101b0c; padding:2px 8px; border-radius:10px; font-weight:700;}
+  .mc-bye, .mc-pending{font-size:13px; color:var(--steel); font-style:italic;}
+  .match-side{
+    display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:8px 0;
+  }
+  .mc-name{flex:1; min-width:90px; font-size:15px; font-weight:600; color:var(--chalk);}
+  .match-side .ft-input, .match-side .in-input{
+    width:64px; background:var(--night); border:1px solid var(--border); color:var(--chalk);
+    padding:9px 8px; border-radius:3px; font-family:var(--font-mono); font-size:14px; min-height:40px;
+  }
+  .mc-vs{
+    text-align:center; font-family:var(--font-cond); font-size:11px; letter-spacing:.1em; color:var(--steel-dim);
+    padding:2px 0;
+  }
+  .mc-side-done{display:flex; align-items:center; justify-content:space-between; padding:6px 0; font-size:14px; color:var(--steel);}
+  .mc-side-done.won{color:var(--gold); font-weight:700;}
+  .mc-side-done .mc-dist{font-family:var(--font-mono); font-size:13px;}
+
+  select#hole-select{min-width:160px;}
+
+  ::-webkit-scrollbar{width:8px; height:8px;}
+  ::-webkit-scrollbar-track{background:var(--night-2);}
+  ::-webkit-scrollbar-thumb{background:var(--turf-line); border-radius:4px;}
+
+  @media (max-width: 640px){
+    .topbar{padding:12px 14px;}
+    .brand-text .l1{display:none;}
+    .event-meta{display:none;}
+    .field-row{flex-direction:column; align-items:stretch;}
+    .field{width:100%;}
+    .field-row > .btn{width:100%;}
+    #view-admin{padding:14px;}
+    .card{padding:14px;}
+    .hero-name{font-size:24px;}
+    .hero.champion-hero .hero-name{font-size:30px;}
+    .hero-round-big{font-size:44px;}
+    .hole-number{font-size:40px;}
+    .match-side{justify-content:space-between;}
+    .mc-name{width:100%; order:0;}
+    .match-side .ft-input, .match-side .in-input{width:58px;}
+  }
 </style>
-
 </head>
 <body class="tv-mode">
 
@@ -644,7 +660,6 @@ select#hole-select{min-width:160px;}
   </div>
 
   <!-- DISPLAY VIEW -->
-
   <div id="view-display">
     <div class="hole-head">
   <div class="hole-info">
@@ -655,118 +670,114 @@ select#hole-select{min-width:160px;}
   <div class="hole-head-right">
     <div class="up-next-banner" id="up-next-banner" style="display:none;"></div>
 
-<svg class="flight-arc" viewBox="0 0 150 56" fill="none">
-  <path d="M6 50 Q 75 -10 144 50" stroke="#ffde59" stroke-width="2" stroke-dasharray="1 8" stroke-linecap="round" opacity="0.7"/>
-  <circle cx="6" cy="50" r="4" fill="#ffde59"/>
-  <path d="M144 50 v-22 l14 6 -14 6" fill="#f0a83a"/>
-</svg>
-
+    <svg class="flight-arc" viewBox="0 0 150 56" fill="none">
+      <path d="M6 50 Q 75 -10 144 50" stroke="#ffde59" stroke-width="2" stroke-dasharray="1 8" stroke-linecap="round" opacity="0.7"/>
+      <circle cx="6" cy="50" r="4" fill="#ffde59"/>
+      <path d="M144 50 v-22 l14 6 -14 6" fill="#f0a83a"/>
+    </svg>
   </div>
 </div>
 
 <div class="hero empty-hero" id="hero-banner">Set up players and generate a bracket to begin</div>
 
-<div class="bracket-scroll" id="bracket-scroll">
-  <div class="bracket-wrap" id="bracket-wrap"></div>
-</div>
+    <div class="bracket-scroll" id="bracket-scroll">
+      <div class="bracket-wrap" id="bracket-wrap"></div>
+    </div>
 
-<div class="ticker-wrap">
-  <div class="ticker-label">Results</div>
-  <div class="ticker-track">
-    <div class="ticker-inner" id="ticker-inner"></div>
-  </div>
-</div>
+    <div class="ticker-wrap">
+      <div class="ticker-label">Results</div>
+      <div class="ticker-track">
+        <div class="ticker-inner" id="ticker-inner"></div>
+      </div>
+    </div>
 
-<div class="champion-overlay" id="champion-overlay" style="display:none;">
-  <button class="champ-exit-btn" id="champ-exit-btn">✕ Exit</button>
-  <div class="confetti-field" id="confetti-field"></div>
-  <img class="champ-watermark" src="/AF_Pineapple_Logo_Web_1600.png" alt="" aria-hidden="true">
-  <div class="champ-inner">
-   <img class="champ-trophy" src="/AF_Pineapple_Logo_Web_1600.png" alt="Atlantic Fields">
-    <div class="champ-tag">Tournament Champion</div>
-    <div class="champ-name" id="champ-name-big"></div>
-    <div class="champ-sub">Closest to the Pin — <span id="champ-hole-label"></span></div>
-    <div class="champ-recap" id="champ-recap"></div>
-  </div>
-</div>
-
+    <div class="champion-overlay" id="champion-overlay" style="display:none;">
+      <button class="champ-exit-btn" id="champ-exit-btn">✕ Exit</button>
+      <div class="confetti-field" id="confetti-field"></div>
+      <img class="champ-watermark" src="/AF_Pineapple_Logo_Web_1600.png" alt="" aria-hidden="true">
+      <div class="champ-inner">
+       <img class="champ-trophy" src="/AF_Pineapple_Logo_Web_1600.png" alt="Atlantic Fields">
+        <div class="champ-tag">Tournament Champion</div>
+        <div class="champ-name" id="champ-name-big"></div>
+        <div class="champ-sub">Closest to the Pin — <span id="champ-hole-label"></span></div>
+        <div class="champ-recap" id="champ-recap"></div>
+      </div>
+    </div>
   </div>
 
   <!-- ADMIN VIEW -->
-
   <div id="view-admin" style="display:none;">
     <div class="admin-grid">
 
-  <div class="card">
-    <h2>Event Details</h2>
-    <div class="field-row">
-      <div class="field">
-        <label for="input-event-name">Event Name</label>
-        <input type="text" id="input-event-name" placeholder="Thursday Night Scramble">
+      <div class="card">
+        <h2>Event Details</h2>
+        <div class="field-row">
+          <div class="field">
+            <label for="input-event-name">Event Name</label>
+            <input type="text" id="input-event-name" placeholder="Thursday Night Scramble">
+          </div>
+          <div class="field">
+            <label for="input-event-date">Date</label>
+            <input type="text" id="input-event-date" placeholder="Aug 21, 2026 · 7:00 PM">
+          </div>
+        </div>
+        <div class="field-row" style="margin-top:10px;">
+          <div class="field">
+            <label for="input-hole-num">Hole Number</label>
+            <input type="number" id="input-hole-num" min="1" max="18" placeholder="e.g. 7">
+          </div>
+          <div class="field">
+            <label for="input-hole-label">Hole Label (optional)</label>
+            <input type="text" id="input-hole-label" placeholder="Par 3 — 165yd">
+          </div>
+          <button class="btn secondary" id="save-event-btn">Save</button>
+        </div>
       </div>
-      <div class="field">
-        <label for="input-event-date">Date</label>
-        <input type="text" id="input-event-date" placeholder="Aug 21, 2026 · 7:00 PM">
+
+      <div class="card">
+        <h2>Players <span class="count-pill" id="player-count-pill">0 signed up</span></h2>
+        <div class="field-row">
+          <div class="field">
+            <label for="input-player-name">Player Name</label>
+            <input type="text" id="input-player-name" placeholder="e.g. Mike Chen" autocomplete="off">
+          </div>
+          <button class="btn" id="add-player-btn">Add Player</button>
+        </div>
+        <div class="chip-list" id="player-chips"></div>
+        <div class="hint">Add everyone signed up tonight — the bracket size adjusts automatically to however many players you have (byes are handled for you).</div>
       </div>
-    </div>
-    <div class="field-row" style="margin-top:10px;">
-      <div class="field">
-        <label for="input-hole-num">Hole Number</label>
-        <input type="number" id="input-hole-num" min="1" max="18" placeholder="e.g. 7">
+
+      <div class="card">
+        <h2>Bracket</h2>
+        <div class="field-row">
+          <button class="btn" id="generate-bracket-btn">Generate Bracket</button>
+        </div>
+        <div class="status-line" id="bracket-status"></div>
       </div>
-      <div class="field">
-        <label for="input-hole-label">Hole Label (optional)</label>
-        <input type="text" id="input-hole-label" placeholder="Par 3 — 165yd">
+
+      <div class="card" id="matches-card" style="display:none;">
+        <h2>Enter Results</h2>
+        <div id="admin-matches"></div>
       </div>
-      <button class="btn secondary" id="save-event-btn">Save</button>
-    </div>
-  </div>
 
-  <div class="card">
-    <h2>Players <span class="count-pill" id="player-count-pill">0 signed up</span></h2>
-    <div class="field-row">
-      <div class="field">
-        <label for="input-player-name">Player Name</label>
-        <input type="text" id="input-player-name" placeholder="e.g. Mike Chen" autocomplete="off">
+      <div class="card" id="champion-card" style="display:none;">
+        <h2>Champion Screen</h2>
+        <div class="field-row">
+          <button class="btn secondary" id="champion-toggle-btn">Hide Champion Screen</button>
+        </div>
+        <div class="hint">Controls the full-screen champion celebration on the TV — use this to bring it back up or dismiss it once everyone's seen it.</div>
       </div>
-      <button class="btn" id="add-player-btn">Add Player</button>
+
+      <div class="card">
+        <h2>Danger Zone</h2>
+        <div class="field-row">
+          <button class="btn danger small" id="reset-bracket-btn">Reset Bracket Only</button>
+          <button class="btn danger small" id="reset-all-btn">Reset Everything</button>
+        </div>
+        <div class="hint">"Reset Bracket Only" clears matches and results but keeps your player list. "Reset Everything" wipes players, hole info, and results — for everyone viewing this event, including the TV.</div>
+      </div>
+
     </div>
-    <div class="chip-list" id="player-chips"></div>
-    <div class="hint">Add everyone signed up tonight — the bracket size adjusts automatically to however many players you have (byes are handled for you).</div>
-  </div>
-
-  <div class="card">
-    <h2>Bracket</h2>
-    <div class="field-row">
-      <button class="btn" id="generate-bracket-btn">Generate Bracket</button>
-    </div>
-    <div class="status-line" id="bracket-status"></div>
-  </div>
-
-  <div class="card" id="matches-card" style="display:none;">
-    <h2>Enter Results <button class="btn secondary small" id="undo-result-btn" disabled>Undo Last Result</button></h2>
-    <div id="admin-matches"></div>
-  </div>
-
-  <div class="card" id="champion-card" style="display:none;">
-    <h2>Champion Screen</h2>
-    <div class="field-row">
-      <button class="btn secondary" id="champion-toggle-btn">Hide Champion Screen</button>
-    </div>
-    <div class="hint">Controls the full-screen champion celebration on the TV — use this to bring it back up or dismiss it once everyone's seen it.</div>
-  </div>
-
-  <div class="card">
-    <h2>Danger Zone</h2>
-    <div class="field-row">
-      <button class="btn danger small" id="reset-bracket-btn">Reset Bracket Only</button>
-      <button class="btn danger small" id="reset-all-btn">Reset Everything</button>
-    </div>
-    <div class="hint">"Reset Bracket Only" clears matches and results but keeps your player list. "Reset Everything" wipes players, hole info, and results — for everyone viewing this event, including the TV.</div>
-  </div>
-
-</div>
-
   </div>
 
 </div>
@@ -783,8 +794,7 @@ select#hole-select{min-width:160px;}
     bracket: null,       // { rounds: [ [match, ...], ... ] }
     champion: null,       // {id, name}
     championDismissed: false, // lets the champion screen be exited without losing who won
-    resultsLog: [],       // [{roundLabel, winner, loser, dist, ts}]
-    undoHistory: []       // snapshots immediately before completed results
+    resultsLog: []        // [{roundLabel, winner, loser, dist, ts}]
   };
 
   let saveTimer = null;
@@ -820,7 +830,6 @@ select#hole-select{min-width:160px;}
         console.error('Failed to parse stored event data', e);
       }
     }
-    if(!Array.isArray(state.undoHistory)) state.undoHistory = [];
     renderAll();
   }
 
@@ -1028,7 +1037,6 @@ select#hole-select{min-width:160px;}
 
     renderPlayerChips();
     renderGenerateButton();
-    renderUndoButton();
     renderAdminMatches();
 
     renderHoleHead();
@@ -1063,14 +1071,6 @@ select#hole-select{min-width:160px;}
     const btn = document.getElementById('generate-bracket-btn');
     btn.textContent = state.bracket ? 'Regenerate Bracket' : 'Generate Bracket';
     btn.disabled = state.players.length < 2;
-  }
-
-  function renderUndoButton(){
-    const btn = document.getElementById('undo-result-btn');
-    if(!btn) return;
-    const canUndo = Array.isArray(state.undoHistory) && state.undoHistory.length > 0;
-    btn.disabled = !canUndo;
-    btn.textContent = canUndo ? 'Undo Last Result' : 'Nothing to Undo';
   }
 
   function renderAdminMatches(){
@@ -1157,17 +1157,6 @@ return '<div class="match-card ready" data-round="' + ri + '" data-match="' + mi
 '</div>';
   }
 
-  document.getElementById('undo-result-btn').addEventListener('click', () => {
-    const history = Array.isArray(state.undoHistory) ? state.undoHistory.slice() : [];
-    const previous = history.pop();
-    if(!previous) return;
-    state = previous;
-    state.undoHistory = history;
-    scheduleSave();
-    renderAll();
-    setBracketStatus('Last result undone. The match is ready to score again.', false);
-  });
-
   document.getElementById('admin-matches').addEventListener('click', (e) => {
     const btn = e.target.closest('.declare-btn');
     if(!btn) return;
@@ -1247,9 +1236,6 @@ if(isChampionship){
   winnerId = btn.dataset.playerId;
 }
 
-const undoSnapshot = JSON.parse(JSON.stringify(state));
-delete undoSnapshot.undoHistory;
-state.undoHistory = (state.undoHistory || []).concat([undoSnapshot]).slice(-20);
 resolveMatch(ri, mi, winnerId, dists.p1, dists.p2);
 scheduleSave();
 renderAll();
@@ -1271,8 +1257,28 @@ renderAll();
   function renderHero(){
     const hero = document.getElementById('hero-banner');
     if(state.champion){
-      // the full-screen champion overlay (see renderChampionOverlay) is the real
-      // celebration moment — keep the hero strip simple underneath it.
+      // Keep the completed Championship bracket visible by itself while its
+      // final distances are being held on screen before the champion overlay.
+      const latestFinalResult = state.resultsLog && state.resultsLog[0];
+      const finalRoundIndex = state.bracket ? state.bracket.rounds.length - 1 : -1;
+      const finalResultAge =
+        latestFinalResult &&
+        latestFinalResult.ri === finalRoundIndex &&
+        typeof latestFinalResult.ts === 'number'
+          ? Date.now() - latestFinalResult.ts
+          : Infinity;
+
+      if(finalResultAge < 6000){
+        if(window.heroIntroTimer){
+          clearTimeout(window.heroIntroTimer);
+          window.heroIntroTimer = null;
+        }
+        hero.className = 'hero hero-hidden';
+        hero.innerHTML = '';
+        fitBracketToScreen();
+        return;
+      }
+
       hero.className = 'hero empty-hero';
       hero.textContent = 'Tournament Complete';
       return;
@@ -1416,29 +1422,115 @@ if(window.heroIntroTimer){
     if(!state.bracket){
       wrap.innerHTML = '';
       wrap.style.height = '0';
-      wrap.style.width = '0';
-      wrap.dataset.rawWidth = '';
       prevWinnersSnapshot = null;
       return;
     }
+   const rounds = state.bracket.rounds;
+const totalRounds = rounds.length;
 
-    const rounds = state.bracket.rounds;
-    const totalRounds = rounds.length;
-    const depth = totalRounds - 1;
-    const step = CW + RG;
-    const centers = computeCenters(rounds[0].length, totalRounds);
-    const containerHeight = centers[0][centers[0].length - 1] + MH/2 + 34;
-    const finalX = depth * step;
-    const containerWidth = (depth * 2) * step + CW;
+// Find the first round that still has an undecided match.
+// Every fully completed round before it will disappear from the TV bracket.
+let firstVisibleRound = rounds.findIndex(round =>
+  round.some(match => !match.winner)
+);
 
-    function leftX(ri){ return ri * step; }
-    function rightX(ri){ return (depth * 2 - ri) * step; }
+if(firstVisibleRound === -1){
+  firstVisibleRound = Math.max(0, totalRounds - 1);
+}
+    const latestResult = state.resultsLog && state.resultsLog[0];
+
+if(latestResult && typeof latestResult.ri === 'number'){
+  const resultAge = Date.now() - latestResult.ts;
+
+  const finishedRound = rounds[latestResult.ri];
+  const roundIsComplete =
+    finishedRound &&
+    finishedRound.every(match => match.winner);
+
+  if(
+    roundIsComplete &&
+    resultAge < 5000 &&
+    latestResult.ri < totalRounds - 1
+  ){
+    firstVisibleRound = Math.min(
+      firstVisibleRound,
+      latestResult.ri
+    );
+  }
+}
+// Smooth transition when a round has just finished
+if(latestResult && typeof latestResult.ri === 'number'){
+  const transitionAge = Date.now() - latestResult.ts;
+  const transitionRound = rounds[latestResult.ri];
+
+  const transitionRoundComplete =
+    transitionRound &&
+    transitionRound.every(match => match.winner) &&
+    latestResult.ri < totalRounds - 1;
+
+  if(transitionRoundComplete){
+
+    // During the final second of the 5-second result hold,
+    // gently fade the completed bracket out.
+    if(transitionAge >= 4000 && transitionAge < 5000){
+      wrap.classList.add('round-collapse-out');
+    }
+
+    // Schedule one precise rebuild at the 5-second mark.
+    const transitionKey = latestResult.ri + '-' + latestResult.ts;
+
+    if(
+      transitionAge < 5000 &&
+      window.roundCollapseKey !== transitionKey
+    ){
+      window.roundCollapseKey = transitionKey;
+
+      clearTimeout(window.roundCollapseTimer);
+
+      window.roundCollapseTimer = setTimeout(() => {
+
+        wrap.classList.remove('round-collapse-out');
+
+        // Re-render now that the completed round can disappear
+        renderBracketTree();
+        fitBracketToScreen();
+
+        // Animate the smaller remaining bracket back in
+        requestAnimationFrame(() => {
+          wrap.classList.add('round-collapse-in');
+
+          setTimeout(() => {
+            wrap.classList.remove('round-collapse-in');
+          }, 900);
+        });
+
+      }, Math.max(0, 5000 - transitionAge));
+    }
+  }
+}
+const visibleRounds = rounds.slice(firstVisibleRound);
+const visibleRoundCount = visibleRounds.length;
+
+const centers = computeCenters(
+  visibleRounds[0].length,
+  visibleRoundCount
+);
+
+const containerHeight =
+  centers[0][centers[0].length - 1] + MH/2 + 30;
+
+const containerWidth =
+  visibleRoundCount * CW +
+  (visibleRoundCount - 1) * RG +
+  4;
 
     wrap.style.height = containerHeight + 'px';
     wrap.style.width = containerWidth + 'px';
     wrap.dataset.rawWidth = containerWidth;
     wrap.dataset.rawHeight = containerHeight;
 
+    // Figure out which matches just got a winner since our last render, so we can
+    // give them a little celebratory pop instead of just silently updating.
     const currentWinners = {};
     rounds.forEach((round, ri) => round.forEach((m, mi) => {
       currentWinners[ri+'-'+mi] = m.winner ? m.winner.id : null;
@@ -1452,69 +1544,38 @@ if(window.heroIntroTimer){
     prevWinnersSnapshot = currentWinners;
 
     let html = '<svg width="' + containerWidth + '" height="' + containerHeight + '">';
-    for(let ri=0; ri<depth-1; ri++){
-      const nextRound = rounds[ri+1];
-      // Left half advances toward the center from left to right.
-      for(let parent=0; parent<halfParentCount; parent++){
-        const childA = parent*2, childB = childA+1;
-        if(childB >= rounds[ri].length/2) break;
-        const x1 = leftX(ri)+CW, x2 = leftX(ri+1), xMid = (x1+x2)/2;
-        const yA = centers[ri][childA], yB = centers[ri][childB], yP = centers[ri+1][parent];
-        const resolved = nextRound[parent].p1 && nextRound[parent].p2;
-        const color = resolved ? 'rgba(255,222,89,.72)' : 'rgba(29,63,92,1)';
+    for(let r=0; r<visibleRoundCount-1; r++){
+      const pairs = centers[r].length/2;
+      for(let i=0;i<pairs;i++){
+        const x1 = r*(CW+RG)+CW;
+        const xMid = x1 + RG/2;
+        const x2 = (r+1)*(CW+RG);
+        const yA = centers[r][2*i], yB = centers[r][2*i+1];
+        const yP = centers[r+1][i];
+        const parentMatch = visibleRounds[r+1][i];
+        const resolved = parentMatch.p1 && parentMatch.p2;
+        const color = resolved ? 'rgba(255,222,89,.55)' : 'rgba(29,63,92,1)';
         html += '<line x1="'+x1+'" y1="'+yA+'" x2="'+xMid+'" y2="'+yA+'" stroke="'+color+'" stroke-width="2"/>';
         html += '<line x1="'+x1+'" y1="'+yB+'" x2="'+xMid+'" y2="'+yB+'" stroke="'+color+'" stroke-width="2"/>';
         html += '<line x1="'+xMid+'" y1="'+yA+'" x2="'+xMid+'" y2="'+yB+'" stroke="'+color+'" stroke-width="2"/>';
         html += '<line x1="'+xMid+'" y1="'+yP+'" x2="'+x2+'" y2="'+yP+'" stroke="'+color+'" stroke-width="2"/>';
       }
-
-      // Right half mirrors the same progression toward the center.
-      for(let parent=Math.ceil(nextRound.length/2); parent<nextRound.length; parent++){
-        const childA = parent*2, childB = childA+1;
-        if(childB >= rounds[ri].length) continue;
-        const x1 = rightX(ri), x2 = rightX(ri+1)+CW, xMid = (x1+x2)/2;
-        const yA = centers[ri][childA], yB = centers[ri][childB], yP = centers[ri+1][parent];
-        const resolved = nextRound[parent].p1 && nextRound[parent].p2;
-        const color = resolved ? 'rgba(255,222,89,.72)' : 'rgba(29,63,92,1)';
-        html += '<line x1="'+x1+'" y1="'+yA+'" x2="'+xMid+'" y2="'+yA+'" stroke="'+color+'" stroke-width="2"/>';
-        html += '<line x1="'+x1+'" y1="'+yB+'" x2="'+xMid+'" y2="'+yB+'" stroke="'+color+'" stroke-width="2"/>';
-        html += '<line x1="'+xMid+'" y1="'+yA+'" x2="'+xMid+'" y2="'+yB+'" stroke="'+color+'" stroke-width="2"/>';
-        html += '<line x1="'+xMid+'" y1="'+yP+'" x2="'+x2+'" y2="'+yP+'" stroke="'+color+'" stroke-width="2"/>';
-      }
-    }
-
-    // The two semifinal winners meet in the shared center final.
-    if(depth > 0){
-      const finalMatch = rounds[depth][0];
-      const finalY = centers[depth][0];
-      const leftY = centers[depth-1][0];
-      const rightY = centers[depth-1][centers[depth-1].length-1];
-      const finalColor = finalMatch.p1 && finalMatch.p2 ? 'rgba(255,222,89,.72)' : 'rgba(29,63,92,1)';
-      const leftStart = leftX(depth-1)+CW, leftEnd = finalX;
-      const rightStart = rightX(depth-1), rightEnd = finalX+CW;
-      const leftMid = (leftStart+leftEnd)/2, rightMid = (rightStart+rightEnd)/2;
-      html += '<path d="M '+leftStart+' '+leftY+' H '+leftMid+' V '+finalY+' H '+leftEnd+'" fill="none" stroke="'+finalColor+'" stroke-width="2"/>';
-      html += '<path d="M '+rightStart+' '+rightY+' H '+rightMid+' V '+finalY+' H '+rightEnd+'" fill="none" stroke="'+finalColor+'" stroke-width="2"/>';
     }
     html += '</svg>';
 
-    rounds.forEach((round, ri) => {
-      const isFinal = ri === depth;
-      if(isFinal){
-        html += '<div class="round-col-label" style="left:'+finalX+'px;">' + roundLabel(ri, totalRounds) + '</div>';
-      } else {
-        html += '<div class="round-col-label" style="left:'+leftX(ri)+'px;">' + roundLabel(ri, totalRounds) + '</div>';
-        html += '<div class="round-col-label" style="left:'+rightX(ri)+'px;">' + roundLabel(ri, totalRounds) + '</div>';
-      }
+    visibleRounds.forEach((round, ri) => {
+      html += '<div class="round-col-label" style="left:'+(ri*(CW+RG))+'px;">' + roundLabel(ri + firstVisibleRound, totalRounds) + '</div>';
       round.forEach((m, mi) => {
         const top = centers[ri][mi] - MH/2;
-        const left = isFinal ? finalX : (mi < round.length/2 ? leftX(ri) : rightX(ri));
+        const left = ri*(CW+RG);
         let cls = 'match-box';
+        
+
+
         let inner = '';
         if(m.bye){
           cls += ' bye';
-          const advanced = m.winner || m.p1 || m.p2;
-          inner = '<div class="mb-side"><span class="mb-name">' + escapeHtml(advanced ? advanced.name : 'BYE') + '</span><span class="mb-dist">bye</span></div>';
+          inner = '<div class="mb-side"><span class="mb-name">' + escapeHtml(m.winner.name) + '</span><span class="mb-dist">bye</span></div>';
         } else if(!m.p1 || !m.p2){
           cls += ' tbd';
           inner = 'TBD';
@@ -1523,7 +1584,7 @@ if(window.heroIntroTimer){
           const p2win = m.winner && m.winner.id === m.p2.id;
           if(!m.winner){
             const live = findLiveMatch();
-            if(live && live.ri === ri && live.mi === mi) cls += ' live';
+            if(live && live.ri === (ri + firstVisibleRound) && live.mi === mi) cls += ' live';
           }
           inner = '<div class="mb-side'+(p1win?' winner':'')+'"><span class="mb-name">' + escapeHtml(m.p1.name) + '</span><span class="mb-dist">' + (m.winner ? fmtDist(m.d1) : '') + '</span></div>' +
                   '<div class="mb-side'+(p2win?' winner':'')+'"><span class="mb-name">' + escapeHtml(m.p2.name) + '</span><span class="mb-dist">' + (m.winner ? fmtDist(m.d2) : '') + '</span></div>';
@@ -1540,22 +1601,40 @@ if(window.heroIntroTimer){
   function fitBracketToScreen(){
   const scrollEl = document.getElementById('bracket-scroll');
   const wrap = document.getElementById('bracket-wrap');
+
   if(!scrollEl || !wrap || !wrap.dataset.rawWidth) return;
 
   const rawW = parseFloat(wrap.dataset.rawWidth);
-  const cs = getComputedStyle(scrollEl);
-  const padW = (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.paddingRight) || 0);
-  const usableW = Math.max(100, scrollEl.clientWidth - padW - 20);
+  const rawH = parseFloat(wrap.dataset.rawHeight);
+  if(!rawW || !rawH) return;
 
-  // Keep text at its authored size for larger fields; zoom in modestly when it fits.
-  // The scroll area stays available when the full bracket exceeds the TV viewport.
-  const scale = Math.min(1.2, Math.max(0.85, usableW / rawW));
-  wrap.style.transformOrigin = 'top left';
+  const cs = getComputedStyle(scrollEl);
+
+  const padW =
+    (parseFloat(cs.paddingLeft) || 0) +
+    (parseFloat(cs.paddingRight) || 0);
+
+  const padH =
+    (parseFloat(cs.paddingTop) || 0) +
+    (parseFloat(cs.paddingBottom) || 0);
+
+  const usableW = Math.max(100, scrollEl.clientWidth - padW - 20);
+  const usableH = Math.max(100, scrollEl.clientHeight - padH - 20);
+
+  const scale = Math.min(
+    usableW / rawW,
+    usableH / rawH,
+    1.25
+  );
+
+  wrap.style.transformOrigin = 'center center';
   wrap.style.transform = `scale(${scale})`;
-  scrollEl.style.overflow = 'auto';
-  scrollEl.style.justifyContent = 'flex-start';
-  scrollEl.style.alignItems = 'flex-start';
+
+  scrollEl.style.overflow = 'hidden';
+  scrollEl.style.justifyContent = 'center';
+  scrollEl.style.alignItems = 'center';
 }
+
   let fitResizeTimer = null;
   window.addEventListener('resize', () => {
     clearTimeout(fitResizeTimer);
@@ -1615,6 +1694,38 @@ if(window.heroIntroTimer){
   function renderChampionOverlay(){
     const overlay = document.getElementById('champion-overlay');
     if(!overlay) return;
+
+    // When the Championship is completed, keep the finished final matchup
+    // (including both distances) on the TV for 6 seconds before celebrating.
+    const latestResult = state.resultsLog && state.resultsLog[0];
+    const finalRoundIndex = state.bracket ? state.bracket.rounds.length - 1 : -1;
+    const isFreshFinalResult =
+      !!state.champion &&
+      latestResult &&
+      latestResult.ri === finalRoundIndex &&
+      typeof latestResult.ts === 'number';
+
+    const finalResultAge = isFreshFinalResult ? (Date.now() - latestResult.ts) : Infinity;
+    const CHAMPION_DELAY = 6000;
+    const waitingOnFinalResult = isFreshFinalResult && finalResultAge < CHAMPION_DELAY;
+
+    if(waitingOnFinalResult){
+      overlay.style.display = 'none';
+      lastChampionOverlayVisible = false;
+
+      const timerKey = latestResult.ri + '-' + latestResult.ts;
+      if(window.championDelayKey !== timerKey){
+        window.championDelayKey = timerKey;
+        clearTimeout(window.championDelayTimer);
+        window.championDelayTimer = setTimeout(() => {
+          renderChampionOverlay();
+        }, Math.max(0, CHAMPION_DELAY - finalResultAge));
+      }
+
+      renderChampionAdminControl();
+      return;
+    }
+
     const shouldShow = !!(state.champion && !state.championDismissed);
 
     if(shouldShow){
@@ -1754,7 +1865,7 @@ if(window.heroIntroTimer){
 
   async function performFullReset(){
     await archiveCurrentEventIfComplete();
-    state = { eventName:'Night Golf Event', eventDate:'', hole:{num:null,label:''}, players:[], bracket:null, champion:null, championDismissed:false, resultsLog:[], undoHistory:[] };
+    state = { eventName:'Night Golf Event', eventDate:'', hole:{num:null,label:''}, players:[], bracket:null, champion:null, championDismissed:false, resultsLog:[] };
     prevWinnersSnapshot = null;
     lastChampionOverlayVisible = false;
     scheduleSave();
@@ -1769,7 +1880,6 @@ if(window.heroIntroTimer){
     state.champion = null;
     state.championDismissed = false;
     state.resultsLog = [];
-    state.undoHistory = [];
     prevWinnersSnapshot = null;
     scheduleSave(); renderAll();
     setBracketStatus('Bracket generated with ' + state.players.length + ' players.', false);
@@ -1778,7 +1888,7 @@ if(window.heroIntroTimer){
   document.getElementById('reset-bracket-btn').addEventListener('click', async () => {
     if(!confirm('Clear the current bracket and results? Your player list stays intact.')) return;
     await archiveCurrentEventIfComplete();
-    state.bracket = null; state.champion = null; state.championDismissed = false; state.resultsLog = []; state.undoHistory = [];
+    state.bracket = null; state.champion = null; state.championDismissed = false; state.resultsLog = [];
     scheduleSave(); renderAll();
   });
 
@@ -1811,6 +1921,5 @@ if(window.heroIntroTimer){
   });
 })();
 </script>
-
 </body>
 </html>
