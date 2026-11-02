@@ -380,11 +380,12 @@
   .bracket-scroll{flex:1;
   min-height:0;
   min-width:0;
-  overflow:hidden;
+  overflow:auto;
   padding:0 28px 60px;
   display:flex;
-  align-items:center;
-  justify-content:center;
+  align-items:flex-start;
+  justify-content:flex-start;
+  overscroll-behavior:contain;
 }
   body.tv-mode{
   overflow:hidden;
@@ -415,14 +416,15 @@ body.tv-mode .hole-head{
 body.tv-mode .bracket-scroll{
   flex:1;
   min-height:0;
-  overflow:hidden;
+  overflow:auto;
   padding-bottom:52px;
 }
  .bracket-wrap{
   position:relative;
   min-height:100px;
+  margin:auto;
   transition:transform .9s cubic-bezier(.2,.8,.2,1);
-  transform-origin:center center;
+  transform-origin:top left;
   will-change:transform;
 }
   .round-collapse-out{
@@ -756,7 +758,7 @@ body.tv-mode .bracket-scroll{
       </div>
 
       <div class="card" id="matches-card" style="display:none;">
-        <h2>Enter Results</h2>
+        <h2>Enter Results <button class="btn secondary small" id="undo-result-btn" disabled>Undo Last Result</button></h2>
         <div id="admin-matches"></div>
       </div>
 
@@ -794,7 +796,8 @@ body.tv-mode .bracket-scroll{
     bracket: null,       // { rounds: [ [match, ...], ... ] }
     champion: null,       // {id, name}
     championDismissed: false, // lets the champion screen be exited without losing who won
-    resultsLog: []        // [{roundLabel, winner, loser, dist, ts}]
+    resultsLog: [],       // [{roundLabel, winner, loser, dist, ts}]
+    undoHistory: []       // snapshots of bracket/results before each scored match
   };
 
   let saveTimer = null;
@@ -830,6 +833,7 @@ body.tv-mode .bracket-scroll{
         console.error('Failed to parse stored event data', e);
       }
     }
+    if(!Array.isArray(state.undoHistory)) state.undoHistory = [];
     renderAll();
   }
 
@@ -1037,6 +1041,7 @@ body.tv-mode .bracket-scroll{
 
     renderPlayerChips();
     renderGenerateButton();
+    renderUndoButton();
     renderAdminMatches();
 
     renderHoleHead();
@@ -1071,6 +1076,14 @@ body.tv-mode .bracket-scroll{
     const btn = document.getElementById('generate-bracket-btn');
     btn.textContent = state.bracket ? 'Regenerate Bracket' : 'Generate Bracket';
     btn.disabled = state.players.length < 2;
+  }
+
+  function renderUndoButton(){
+    const btn = document.getElementById('undo-result-btn');
+    if(!btn) return;
+    const canUndo = Array.isArray(state.undoHistory) && state.undoHistory.length > 0;
+    btn.disabled = !canUndo;
+    btn.textContent = 'Undo Last Result';
   }
 
   function renderAdminMatches(){
@@ -1157,12 +1170,33 @@ return '<div class="match-card ready" data-round="' + ri + '" data-match="' + mi
 '</div>';
   }
 
+  document.getElementById('undo-result-btn').addEventListener('click', () => {
+    const history = Array.isArray(state.undoHistory) ? state.undoHistory.slice() : [];
+    const previous = history.pop();
+    if(!previous) return;
+    state.bracket = previous.bracket;
+    state.champion = previous.champion || null;
+    state.championDismissed = !!previous.championDismissed;
+    state.resultsLog = previous.resultsLog || [];
+    state.undoHistory = history;
+    prevWinnersSnapshot = null;
+    scheduleSave();
+    renderAll();
+    setBracketStatus('Last result undone. You can enter it again.', false);
+  });
+
   document.getElementById('admin-matches').addEventListener('click', (e) => {
     const btn = e.target.closest('.declare-btn');
     if(!btn) return;
     const card = btn.closest('.match-card');
     const ri = parseInt(card.dataset.round, 10);
     const mi = parseInt(card.dataset.match, 10);
+    const undoSnapshot = {
+      bracket: JSON.parse(JSON.stringify(state.bracket)),
+      champion: state.champion ? {...state.champion} : null,
+      championDismissed: state.championDismissed,
+      resultsLog: JSON.parse(JSON.stringify(state.resultsLog || []))
+    };
    const sides = card.querySelectorAll('.match-side');
 const dists = {};
 const isChampionship = card.classList.contains('championship-entry');
@@ -1236,6 +1270,7 @@ if(isChampionship){
   winnerId = btn.dataset.playerId;
 }
 
+state.undoHistory = (state.undoHistory || []).concat([undoSnapshot]).slice(-20);
 resolveMatch(ri, mi, winnerId, dists.p1, dists.p2);
 scheduleSave();
 renderAll();
@@ -1285,101 +1320,101 @@ renderAll();
     }
     const live = findLiveMatch();
     // If the final match of a round was just completed,
-// wait for the result hold + bracket transition before
-// introducing the next matchup.
-const latestHeroResult = state.resultsLog && state.resultsLog[0];
+    // wait for the result hold + bracket transition before
+    // introducing the next matchup.
+    const latestHeroResult = state.resultsLog && state.resultsLog[0];
 
-if(latestHeroResult && typeof latestHeroResult.ri === 'number'){
-  const heroResultAge = Date.now() - latestHeroResult.ts;
-  const heroFinishedRound = state.bracket.rounds[latestHeroResult.ri];
+    if(latestHeroResult && typeof latestHeroResult.ri === 'number'){
+      const heroResultAge = Date.now() - latestHeroResult.ts;
+      const heroFinishedRound = state.bracket.rounds[latestHeroResult.ri];
 
-  const heroRoundComplete =
-    heroFinishedRound &&
-    heroFinishedRound.every(match => match.winner) &&
-    latestHeroResult.ri < state.bracket.rounds.length - 1;
+      const heroRoundComplete =
+        heroFinishedRound &&
+        heroFinishedRound.every(match => match.winner) &&
+        latestHeroResult.ri < state.bracket.rounds.length - 1;
 
-  if(heroRoundComplete && heroResultAge < 5900){
+      if(heroRoundComplete && heroResultAge < 5900){
+
+        if(window.heroIntroTimer){
+          clearTimeout(window.heroIntroTimer);
+          window.heroIntroTimer = null;
+        }
+
+        hero.className = 'hero hero-hidden';
+        hero.innerHTML = '';
+
+        const holdKey =
+          latestHeroResult.ri + '-' + latestHeroResult.ts;
+
+        if(window.heroRoundHoldKey !== holdKey){
+          window.heroRoundHoldKey = holdKey;
+
+          clearTimeout(window.heroRoundHoldTimer);
+
+          window.heroRoundHoldTimer = setTimeout(() => {
+            // Force the new matchup to get its full intro animation.
+            window.lastHeroMatchKey = null;
+            renderHero();
+          }, Math.max(0, 5900 - heroResultAge));
+        }
+
+        return;
+      }
+    }
+
+    if(live){
+      const totalRounds = state.bracket.rounds.length;
+
+      const matchKey =
+        live.ri + '-' +
+        live.mi + '-' +
+        live.match.p1.name + '-' +
+        live.match.p2.name;
+
+      if(window.lastHeroMatchKey !== matchKey){
+        window.lastHeroMatchKey = matchKey;
+
+        if(window.heroIntroTimer){
+          clearTimeout(window.heroIntroTimer);
+        }
+
+        hero.className = 'hero hero-intro';
+
+        hero.innerHTML =
+          '<div class="hero-tag">Now On The Tee</div>' +
+          '<div class="hero-round-big">' +
+            roundLabel(live.ri, totalRounds) +
+          '</div>' +
+          '<div class="hero-matchup">' +
+            '<div class="hero-name">' +
+              escapeHtml(live.match.p1.name) +
+            '</div>' +
+            '<div class="hero-vs">VS</div>' +
+            '<div class="hero-name">' +
+              escapeHtml(live.match.p2.name) +
+            '</div>' +
+          '</div>';
+
+        window.heroIntroTimer = setTimeout(() => {
+          hero.classList.add('hero-exit');
+
+          setTimeout(() => {
+            hero.className = 'hero hero-hidden';
+            hero.innerHTML = '';
+            fitBracketToScreen();
+          }, 1500);
+
+        }, 10500);
+      }
+
+      return;
+    }
+    window.lastHeroMatchKey = null;
 
     if(window.heroIntroTimer){
       clearTimeout(window.heroIntroTimer);
       window.heroIntroTimer = null;
     }
-
-    hero.className = 'hero hero-hidden';
-    hero.innerHTML = '';
-
-    const holdKey =
-      latestHeroResult.ri + '-' + latestHeroResult.ts;
-
-    if(window.heroRoundHoldKey !== holdKey){
-      window.heroRoundHoldKey = holdKey;
-
-      clearTimeout(window.heroRoundHoldTimer);
-
-      window.heroRoundHoldTimer = setTimeout(() => {
-        // Force the new matchup to get its full intro animation.
-        window.lastHeroMatchKey = null;
-        renderHero();
-      }, Math.max(0, 5900 - heroResultAge));
-    }
-
-    return;
-  }
-}
-
-    if(live){
-  const totalRounds = state.bracket.rounds.length;
-
-  const matchKey =
-    live.ri + '-' +
-    live.mi + '-' +
-    live.match.p1.name + '-' +
-    live.match.p2.name;
-
-  if(window.lastHeroMatchKey !== matchKey){
-    window.lastHeroMatchKey = matchKey;
-
-    if(window.heroIntroTimer){
-      clearTimeout(window.heroIntroTimer);
-    }
-
-    hero.className = 'hero hero-intro';
-
-    hero.innerHTML =
-      '<div class="hero-tag">Now On The Tee</div>' +
-      '<div class="hero-round-big">' +
-        roundLabel(live.ri, totalRounds) +
-      '</div>' +
-      '<div class="hero-matchup">' +
-        '<div class="hero-name">' +
-          escapeHtml(live.match.p1.name) +
-        '</div>' +
-        '<div class="hero-vs">VS</div>' +
-        '<div class="hero-name">' +
-          escapeHtml(live.match.p2.name) +
-        '</div>' +
-      '</div>';
-
-    window.heroIntroTimer = setTimeout(() => {
-      hero.classList.add('hero-exit');
-
-      setTimeout(() => {
-        hero.className = 'hero hero-hidden';
-        hero.innerHTML = '';
-        fitBracketToScreen();
-      }, 1500);
-
-    }, 10500);
-  }
-
-  return;
-}
-window.lastHeroMatchKey = null;
-
-if(window.heroIntroTimer){
-  clearTimeout(window.heroIntroTimer);
-  window.heroIntroTimer = null;
-}
     if(state.bracket){
       hero.className = 'hero empty-hero';
       hero.textContent = 'Bracket in progress…';
@@ -1422,115 +1457,30 @@ if(window.heroIntroTimer){
     if(!state.bracket){
       wrap.innerHTML = '';
       wrap.style.height = '0';
+      wrap.style.width = '0';
+      wrap.dataset.rawWidth = '';
       prevWinnersSnapshot = null;
       return;
     }
-   const rounds = state.bracket.rounds;
-const totalRounds = rounds.length;
 
-// Find the first round that still has an undecided match.
-// Every fully completed round before it will disappear from the TV bracket.
-let firstVisibleRound = rounds.findIndex(round =>
-  round.some(match => !match.winner)
-);
+    const rounds = state.bracket.rounds;
+    const totalRounds = rounds.length;
+    const depth = totalRounds - 1;
+    const step = CW + RG;
+    const centers = computeCenters(rounds[0].length, totalRounds);
+    const containerHeight = centers[0][centers[0].length - 1] + MH/2 + 30;
+    const finalX = depth * step;
+    const containerWidth = 2 * depth * step + CW;
 
-if(firstVisibleRound === -1){
-  firstVisibleRound = Math.max(0, totalRounds - 1);
-}
-    const latestResult = state.resultsLog && state.resultsLog[0];
-
-if(latestResult && typeof latestResult.ri === 'number'){
-  const resultAge = Date.now() - latestResult.ts;
-
-  const finishedRound = rounds[latestResult.ri];
-  const roundIsComplete =
-    finishedRound &&
-    finishedRound.every(match => match.winner);
-
-  if(
-    roundIsComplete &&
-    resultAge < 5000 &&
-    latestResult.ri < totalRounds - 1
-  ){
-    firstVisibleRound = Math.min(
-      firstVisibleRound,
-      latestResult.ri
-    );
-  }
-}
-// Smooth transition when a round has just finished
-if(latestResult && typeof latestResult.ri === 'number'){
-  const transitionAge = Date.now() - latestResult.ts;
-  const transitionRound = rounds[latestResult.ri];
-
-  const transitionRoundComplete =
-    transitionRound &&
-    transitionRound.every(match => match.winner) &&
-    latestResult.ri < totalRounds - 1;
-
-  if(transitionRoundComplete){
-
-    // During the final second of the 5-second result hold,
-    // gently fade the completed bracket out.
-    if(transitionAge >= 4000 && transitionAge < 5000){
-      wrap.classList.add('round-collapse-out');
-    }
-
-    // Schedule one precise rebuild at the 5-second mark.
-    const transitionKey = latestResult.ri + '-' + latestResult.ts;
-
-    if(
-      transitionAge < 5000 &&
-      window.roundCollapseKey !== transitionKey
-    ){
-      window.roundCollapseKey = transitionKey;
-
-      clearTimeout(window.roundCollapseTimer);
-
-      window.roundCollapseTimer = setTimeout(() => {
-
-        wrap.classList.remove('round-collapse-out');
-
-        // Re-render now that the completed round can disappear
-        renderBracketTree();
-        fitBracketToScreen();
-
-        // Animate the smaller remaining bracket back in
-        requestAnimationFrame(() => {
-          wrap.classList.add('round-collapse-in');
-
-          setTimeout(() => {
-            wrap.classList.remove('round-collapse-in');
-          }, 900);
-        });
-
-      }, Math.max(0, 5000 - transitionAge));
-    }
-  }
-}
-const visibleRounds = rounds.slice(firstVisibleRound);
-const visibleRoundCount = visibleRounds.length;
-
-const centers = computeCenters(
-  visibleRounds[0].length,
-  visibleRoundCount
-);
-
-const containerHeight =
-  centers[0][centers[0].length - 1] + MH/2 + 30;
-
-const containerWidth =
-  visibleRoundCount * CW +
-  (visibleRoundCount - 1) * RG +
-  4;
+    function leftX(ri){ return ri * step; }
+    function rightX(ri){ return (2 * depth - ri) * step; }
 
     wrap.style.height = containerHeight + 'px';
     wrap.style.width = containerWidth + 'px';
     wrap.dataset.rawWidth = containerWidth;
     wrap.dataset.rawHeight = containerHeight;
 
-    // Figure out which matches just got a winner since our last render, so we can
-    // give them a little celebratory pop instead of just silently updating.
+    // Keep completed winners highlighted as the bracket fills in.
     const currentWinners = {};
     rounds.forEach((round, ri) => round.forEach((m, mi) => {
       currentWinners[ri+'-'+mi] = m.winner ? m.winner.id : null;
@@ -1544,16 +1494,29 @@ const containerWidth =
     prevWinnersSnapshot = currentWinners;
 
     let html = '<svg width="' + containerWidth + '" height="' + containerHeight + '">';
-    for(let r=0; r<visibleRoundCount-1; r++){
-      const pairs = centers[r].length/2;
-      for(let i=0;i<pairs;i++){
-        const x1 = r*(CW+RG)+CW;
-        const xMid = x1 + RG/2;
-        const x2 = (r+1)*(CW+RG);
-        const yA = centers[r][2*i], yB = centers[r][2*i+1];
-        const yP = centers[r+1][i];
-        const parentMatch = visibleRounds[r+1][i];
-        const resolved = parentMatch.p1 && parentMatch.p2;
+
+    // Connect each half of the bracket toward the center.
+    for(let ri=0; ri<depth-1; ri++){
+      const nextRound = rounds[ri+1];
+      const halfParents = nextRound.length / 2;
+
+      for(let parent=0; parent<halfParents; parent++){
+        const childA = parent*2, childB = childA+1;
+        const x1 = leftX(ri)+CW, x2 = leftX(ri+1), xMid = (x1+x2)/2;
+        const yA = centers[ri][childA], yB = centers[ri][childB], yP = centers[ri+1][parent];
+        const resolved = nextRound[parent].p1 && nextRound[parent].p2;
+        const color = resolved ? 'rgba(255,222,89,.55)' : 'rgba(29,63,92,1)';
+        html += '<line x1="'+x1+'" y1="'+yA+'" x2="'+xMid+'" y2="'+yA+'" stroke="'+color+'" stroke-width="2"/>';
+        html += '<line x1="'+x1+'" y1="'+yB+'" x2="'+xMid+'" y2="'+yB+'" stroke="'+color+'" stroke-width="2"/>';
+        html += '<line x1="'+xMid+'" y1="'+yA+'" x2="'+xMid+'" y2="'+yB+'" stroke="'+color+'" stroke-width="2"/>';
+        html += '<line x1="'+xMid+'" y1="'+yP+'" x2="'+x2+'" y2="'+yP+'" stroke="'+color+'" stroke-width="2"/>';
+      }
+
+      for(let parent=halfParents; parent<nextRound.length; parent++){
+        const childA = parent*2, childB = childA+1;
+        const x1 = rightX(ri), x2 = rightX(ri+1)+CW, xMid = (x1+x2)/2;
+        const yA = centers[ri][childA], yB = centers[ri][childB], yP = centers[ri+1][parent];
+        const resolved = nextRound[parent].p1 && nextRound[parent].p2;
         const color = resolved ? 'rgba(255,222,89,.55)' : 'rgba(29,63,92,1)';
         html += '<line x1="'+x1+'" y1="'+yA+'" x2="'+xMid+'" y2="'+yA+'" stroke="'+color+'" stroke-width="2"/>';
         html += '<line x1="'+x1+'" y1="'+yB+'" x2="'+xMid+'" y2="'+yB+'" stroke="'+color+'" stroke-width="2"/>';
@@ -1561,18 +1524,38 @@ const containerWidth =
         html += '<line x1="'+xMid+'" y1="'+yP+'" x2="'+x2+'" y2="'+yP+'" stroke="'+color+'" stroke-width="2"/>';
       }
     }
+
+    // Join the two finalists to the single championship match in the middle.
+    if(depth > 0){
+      const finalMatch = rounds[depth][0];
+      const finalY = centers[depth][0];
+      const leftY = centers[depth-1][0];
+      const rightY = centers[depth-1][centers[depth-1].length-1];
+      const color = finalMatch.p1 && finalMatch.p2 ? 'rgba(255,222,89,.55)' : 'rgba(29,63,92,1)';
+      const leftStart = leftX(depth-1)+CW, leftEnd = finalX;
+      const rightStart = rightX(depth-1), rightEnd = finalX+CW;
+      const leftMid = (leftStart+leftEnd)/2, rightMid = (rightStart+rightEnd)/2;
+      html += '<path d="M '+leftStart+' '+leftY+' H '+leftMid+' V '+finalY+' H '+leftEnd+'" fill="none" stroke="'+color+'" stroke-width="2"/>';
+      html += '<path d="M '+rightStart+' '+rightY+' H '+rightMid+' V '+finalY+' H '+rightEnd+'" fill="none" stroke="'+color+'" stroke-width="2"/>';
+    }
     html += '</svg>';
 
-    visibleRounds.forEach((round, ri) => {
-      html += '<div class="round-col-label" style="left:'+(ri*(CW+RG))+'px;">' + roundLabel(ri + firstVisibleRound, totalRounds) + '</div>';
+    // Show every round at all times. The final stays in the center, with each
+    // half's earlier rounds mirrored outward from it.
+    rounds.forEach((round, ri) => {
+      const isFinal = ri === depth;
+      if(isFinal){
+        html += '<div class="round-col-label" style="left:'+finalX+'px;">' + roundLabel(ri, totalRounds) + '</div>';
+      } else {
+        html += '<div class="round-col-label" style="left:'+leftX(ri)+'px;">' + roundLabel(ri, totalRounds) + '</div>';
+        html += '<div class="round-col-label" style="left:'+rightX(ri)+'px;">' + roundLabel(ri, totalRounds) + '</div>';
+      }
       round.forEach((m, mi) => {
         const top = centers[ri][mi] - MH/2;
-        const left = ri*(CW+RG);
+        const left = isFinal ? finalX : (mi < round.length/2 ? leftX(ri) : rightX(ri));
         let cls = 'match-box';
-        
-
-
         let inner = '';
+
         if(m.bye){
           cls += ' bye';
           inner = '<div class="mb-side"><span class="mb-name">' + escapeHtml(m.winner.name) + '</span><span class="mb-dist">bye</span></div>';
@@ -1584,7 +1567,7 @@ const containerWidth =
           const p2win = m.winner && m.winner.id === m.p2.id;
           if(!m.winner){
             const live = findLiveMatch();
-            if(live && live.ri === (ri + firstVisibleRound) && live.mi === mi) cls += ' live';
+            if(live && live.ri === ri && live.mi === mi) cls += ' live';
           }
           inner = '<div class="mb-side'+(p1win?' winner':'')+'"><span class="mb-name">' + escapeHtml(m.p1.name) + '</span><span class="mb-dist">' + (m.winner ? fmtDist(m.d1) : '') + '</span></div>' +
                   '<div class="mb-side'+(p2win?' winner':'')+'"><span class="mb-name">' + escapeHtml(m.p2.name) + '</span><span class="mb-dist">' + (m.winner ? fmtDist(m.d2) : '') + '</span></div>';
@@ -1599,42 +1582,23 @@ const containerWidth =
   }
 
   function fitBracketToScreen(){
-  const scrollEl = document.getElementById('bracket-scroll');
-  const wrap = document.getElementById('bracket-wrap');
+    const scrollEl = document.getElementById('bracket-scroll');
+    const wrap = document.getElementById('bracket-wrap');
+    if(!scrollEl || !wrap || !wrap.dataset.rawWidth) return;
 
-  if(!scrollEl || !wrap || !wrap.dataset.rawWidth) return;
+    const rawW = parseFloat(wrap.dataset.rawWidth);
+    const cs = getComputedStyle(scrollEl);
+    const padW = (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.paddingRight) || 0);
+    const usableW = Math.max(100, scrollEl.clientWidth - padW - 20);
 
-  const rawW = parseFloat(wrap.dataset.rawWidth);
-  const rawH = parseFloat(wrap.dataset.rawHeight);
-  if(!rawW || !rawH) return;
-
-  const cs = getComputedStyle(scrollEl);
-
-  const padW =
-    (parseFloat(cs.paddingLeft) || 0) +
-    (parseFloat(cs.paddingRight) || 0);
-
-  const padH =
-    (parseFloat(cs.paddingTop) || 0) +
-    (parseFloat(cs.paddingBottom) || 0);
-
-  const usableW = Math.max(100, scrollEl.clientWidth - padW - 20);
-  const usableH = Math.max(100, scrollEl.clientHeight - padH - 20);
-
-  const scale = Math.min(
-    usableW / rawW,
-    usableH / rawH,
-    1.25
-  );
-
-  wrap.style.transformOrigin = 'center center';
-  wrap.style.transform = `scale(${scale})`;
-
-  scrollEl.style.overflow = 'hidden';
-  scrollEl.style.justifyContent = 'center';
-  scrollEl.style.alignItems = 'center';
-}
-
+    // Keep the established match-box styling readable and scroll when the field is large.
+    const scale = Math.min(1.25, Math.max(0.85, usableW / rawW));
+    wrap.style.transformOrigin = 'top left';
+    wrap.style.transform = `scale(${scale})`;
+    scrollEl.style.overflow = 'auto';
+    scrollEl.style.justifyContent = 'flex-start';
+    scrollEl.style.alignItems = 'flex-start';
+  }
   let fitResizeTimer = null;
   window.addEventListener('resize', () => {
     clearTimeout(fitResizeTimer);
@@ -1796,23 +1760,23 @@ const containerWidth =
   });
 
   document.getElementById('mode-toggle').addEventListener('click', () => {
-  const disp = document.getElementById('view-display');
-  const adm = document.getElementById('view-admin');
-  const btn = document.getElementById('mode-toggle');
+    const disp = document.getElementById('view-display');
+    const adm = document.getElementById('view-admin');
+    const btn = document.getElementById('mode-toggle');
 
-  if(adm.style.display === 'none'){
-    disp.style.display = 'none';
-    adm.style.display = 'block';
-    btn.textContent = 'TV Display';
-    document.body.classList.remove('tv-mode');
-  } else {
-    adm.style.display = 'none';
-    disp.style.display = 'flex';
-    btn.textContent = 'Admin View';
-    document.body.classList.add('tv-mode');
-    fitBracketToScreen();
-  }
-});
+    if(adm.style.display === 'none'){
+      disp.style.display = 'none';
+      adm.style.display = 'block';
+      btn.textContent = 'TV Display';
+      document.body.classList.remove('tv-mode');
+    } else {
+      adm.style.display = 'none';
+      disp.style.display = 'flex';
+      btn.textContent = 'Admin View';
+      document.body.classList.add('tv-mode');
+      fitBracketToScreen();
+    }
+  });
 
   document.getElementById('save-event-btn').addEventListener('click', () => {
     state.eventName = document.getElementById('input-event-name').value.trim() || 'Night Golf Event';
@@ -1865,7 +1829,7 @@ const containerWidth =
 
   async function performFullReset(){
     await archiveCurrentEventIfComplete();
-    state = { eventName:'Night Golf Event', eventDate:'', hole:{num:null,label:''}, players:[], bracket:null, champion:null, championDismissed:false, resultsLog:[] };
+    state = { eventName:'Night Golf Event', eventDate:'', hole:{num:null,label:''}, players:[], bracket:null, champion:null, championDismissed:false, resultsLog:[], undoHistory:[] };
     prevWinnersSnapshot = null;
     lastChampionOverlayVisible = false;
     scheduleSave();
@@ -1880,6 +1844,7 @@ const containerWidth =
     state.champion = null;
     state.championDismissed = false;
     state.resultsLog = [];
+    state.undoHistory = [];
     prevWinnersSnapshot = null;
     scheduleSave(); renderAll();
     setBracketStatus('Bracket generated with ' + state.players.length + ' players.', false);
@@ -1888,7 +1853,7 @@ const containerWidth =
   document.getElementById('reset-bracket-btn').addEventListener('click', async () => {
     if(!confirm('Clear the current bracket and results? Your player list stays intact.')) return;
     await archiveCurrentEventIfComplete();
-    state.bracket = null; state.champion = null; state.championDismissed = false; state.resultsLog = [];
+    state.bracket = null; state.champion = null; state.championDismissed = false; state.resultsLog = []; state.undoHistory = [];
     scheduleSave(); renderAll();
   });
 
