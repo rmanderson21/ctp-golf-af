@@ -401,6 +401,7 @@ body.tv-mode #view-display{
   flex:1;
   min-height:0;
   overflow:hidden;
+  position:relative;
 }
 
 body.tv-mode .hole-head,
@@ -409,22 +410,63 @@ body.tv-mode .hero{
 }
 
 body.tv-mode .hole-head{
-  padding:12px 28px 8px;
+  padding:8px 22px 4px;
   align-items:center;
 }
+
+body.tv-mode .hole-number{font-size:42px;}
+
+body.tv-mode .hero{
+  position:absolute;
+  z-index:6;
+  left:28px;
+  right:28px;
+  top:50%;
+  width:auto;
+  margin:0;
+  transform:translateY(-50%);
+  min-height:112px;
+  padding:12px 20px;
+  gap:8px;
+}
+
+body.tv-mode .hero-intro{
+  animation-name:heroOverlayIn;
+}
+
+body.tv-mode .hero-exit{
+  animation-name:heroOverlayOut;
+  min-height:112px !important;
+  border-width:1px;
+}
+
+@keyframes heroOverlayIn{
+  from{opacity:0; transform:translateY(calc(-50% - 18px));}
+  to{opacity:1; transform:translateY(-50%);}
+}
+
+@keyframes heroOverlayOut{
+  from{opacity:1; transform:translateY(-50%);}
+  to{opacity:0; transform:translateY(calc(-50% - 18px));}
+}
+
+body.tv-mode .hero-round-big{font-size:50px;}
+body.tv-mode .hero-name{font-size:28px;}
+body.tv-mode .hero-vs{font-size:15px;}
 
 body.tv-mode .bracket-scroll{
   flex:1;
   min-height:0;
-  overflow:auto;
-  padding-bottom:52px;
+  position:relative;
+  overflow:hidden;
+  padding:0 18px 42px;
 }
  .bracket-wrap{
-  position:relative;
+  position:absolute;
   min-height:100px;
-  margin:auto;
+  margin:0;
   transition:transform .9s cubic-bezier(.2,.8,.2,1);
-  transform-origin:top left;
+  transform-origin:center center;
   will-change:transform;
 }
   .round-collapse-out{
@@ -1308,6 +1350,10 @@ renderAll();
           clearTimeout(window.heroIntroTimer);
           window.heroIntroTimer = null;
         }
+        if(window.heroFadeTimer){
+          clearTimeout(window.heroFadeTimer);
+          window.heroFadeTimer = null;
+        }
         hero.className = 'hero hero-hidden';
         hero.innerHTML = '';
         fitBracketToScreen();
@@ -1338,6 +1384,10 @@ if(latestHeroResult && typeof latestHeroResult.ri === 'number'){
     if(window.heroIntroTimer){
       clearTimeout(window.heroIntroTimer);
       window.heroIntroTimer = null;
+    }
+    if(window.heroFadeTimer){
+      clearTimeout(window.heroFadeTimer);
+      window.heroFadeTimer = null;
     }
 
     hero.className = 'hero hero-hidden';
@@ -1376,6 +1426,11 @@ if(latestHeroResult && typeof latestHeroResult.ri === 'number'){
 
     if(window.heroIntroTimer){
       clearTimeout(window.heroIntroTimer);
+      window.heroIntroTimer = null;
+    }
+    if(window.heroFadeTimer){
+      clearTimeout(window.heroFadeTimer);
+      window.heroFadeTimer = null;
     }
 
     hero.className = 'hero hero-intro';
@@ -1395,7 +1450,20 @@ if(latestHeroResult && typeof latestHeroResult.ri === 'number'){
         '</div>' +
       '</div>';
 
-    // Keep the active matchup on the TV until its result is entered.
+    // Show the new matchup for the intro, then clear the space for the bracket.
+    window.heroIntroTimer = setTimeout(() => {
+      if(window.lastHeroMatchKey !== matchKey) return;
+      hero.classList.remove('hero-intro');
+      hero.classList.add('hero-exit');
+      window.heroFadeTimer = setTimeout(() => {
+        if(window.lastHeroMatchKey !== matchKey) return;
+        hero.className = 'hero hero-hidden';
+        hero.innerHTML = '';
+        window.heroIntroTimer = null;
+        window.heroFadeTimer = null;
+        fitBracketToScreen();
+      }, 1500);
+    }, 9000);
   }
 
   return;
@@ -1405,6 +1473,10 @@ window.lastHeroMatchKey = null;
 if(window.heroIntroTimer){
   clearTimeout(window.heroIntroTimer);
   window.heroIntroTimer = null;
+}
+if(window.heroFadeTimer){
+  clearTimeout(window.heroFadeTimer);
+  window.heroFadeTimer = null;
 }
     if(state.bracket){
       hero.className = 'hero empty-hero';
@@ -1430,12 +1502,12 @@ if(window.heroIntroTimer){
   }
 
   function computeCenters(numRound0, totalRounds){
-    if(numRound0 <= 1) return [[MH/2]];
+    if(numRound0 <= 1) return [[30 + MH/2]];
     const centers = [];
     const firstHalfCount = numRound0 / 2;
     const firstRound = [];
     for(let i=0;i<firstHalfCount;i++){
-      firstRound.push(i*(MH+G) + MH/2);
+      firstRound.push(30 + i*(MH+G) + MH/2);
     }
     // Keep the left and right halves in matching rows instead of placing
     // one half above the other like opposite corners.
@@ -1626,8 +1698,10 @@ if(window.heroIntroTimer){
     const scale = Math.min(1.25, usableW / rawW, usableH / rawH);
 
     // Fit the complete bracket into the TV area so viewers never need to scroll.
+    wrap.style.left = '50%';
+    wrap.style.top = '50%';
     wrap.style.transformOrigin = 'center center';
-    wrap.style.transform = `scale(${scale})`;
+    wrap.style.transform = `translate(-50%, -50%) scale(${scale})`;
     scrollEl.style.overflow = 'hidden';
     scrollEl.style.justifyContent = 'center';
     scrollEl.style.alignItems = 'center';
