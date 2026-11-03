@@ -509,7 +509,7 @@ body.tv-mode .bracket-scroll{
   .match-box .mb-side .mb-name{white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:140px;}
   .match-box .mb-side .mb-dist{font-family:var(--font-mono); font-size:13px; font-weight:800; flex-shrink:0;}
   .match-box.bye .mb-side{color:var(--steel-dim); font-style:italic; font-weight:600;}
-  .match-box.tbd{align-items:center; justify-content:center; color:var(--steel-dim); font-family:var(--font-cond); letter-spacing:.06em; text-transform:uppercase; font-size:12px;}
+  .match-box.tbd{align-items:center; justify-content:center; color:var(--steel-dim); font-family:var(--font-cond); letter-spacing:.06em; text-transform:uppercase; font-size:13px;}
   @keyframes scorePop{
     0%{ transform:scale(1); box-shadow:none; }
     18%{ transform:scale(1.16); box-shadow:0 0 0 2px var(--gold), 0 0 28px rgba(240,168,58,.85); }
@@ -828,7 +828,7 @@ body.tv-mode .bracket-scroll{
 
 <script>
 (function(){
-  const MH = 76, G = 18, CW = 230, RG = 58; // bracket geometry (px) — sized for bold, room-readable text
+  const MH = 84, G = 14, CW = 250, RG = 32; // bracket geometry (px) — sized for bold, room-readable text
 
   let state = {
     eventName: 'Night Golf Event',
@@ -1563,7 +1563,7 @@ if(window.heroFadeTimer){
     function rightX(ri){ return (2 * depth - ri) * step; }
     function boxSize(ri, match){
       const hasNames = !!(match.p1 || match.p2 || match.winner);
-      return !hasNames ? {w:112, h:30} : {w:CW, h:MH};
+      return !hasNames ? {w:150, h:42} : {w:CW, h:MH};
     }
     function boxLeft(ri, mi, side){
       const size = boxSize(ri, visibleRounds[ri][mi]);
