@@ -1320,101 +1320,92 @@ renderAll();
     }
     const live = findLiveMatch();
     // If the final match of a round was just completed,
-    // wait for the result hold + bracket transition before
-    // introducing the next matchup.
-    const latestHeroResult = state.resultsLog && state.resultsLog[0];
+// wait for the result hold + bracket transition before
+// introducing the next matchup.
+const latestHeroResult = state.resultsLog && state.resultsLog[0];
 
-    if(latestHeroResult && typeof latestHeroResult.ri === 'number'){
-      const heroResultAge = Date.now() - latestHeroResult.ts;
-      const heroFinishedRound = state.bracket.rounds[latestHeroResult.ri];
+if(latestHeroResult && typeof latestHeroResult.ri === 'number'){
+  const heroResultAge = Date.now() - latestHeroResult.ts;
+  const heroFinishedRound = state.bracket.rounds[latestHeroResult.ri];
 
-      const heroRoundComplete =
-        heroFinishedRound &&
-        heroFinishedRound.every(match => match.winner) &&
-        latestHeroResult.ri < state.bracket.rounds.length - 1;
+  const heroRoundComplete =
+    heroFinishedRound &&
+    heroFinishedRound.every(match => match.winner) &&
+    latestHeroResult.ri < state.bracket.rounds.length - 1;
 
-      if(heroRoundComplete && heroResultAge < 5900){
-
-        if(window.heroIntroTimer){
-          clearTimeout(window.heroIntroTimer);
-          window.heroIntroTimer = null;
-        }
-
-        hero.className = 'hero hero-hidden';
-        hero.innerHTML = '';
-
-        const holdKey =
-          latestHeroResult.ri + '-' + latestHeroResult.ts;
-
-        if(window.heroRoundHoldKey !== holdKey){
-          window.heroRoundHoldKey = holdKey;
-
-          clearTimeout(window.heroRoundHoldTimer);
-
-          window.heroRoundHoldTimer = setTimeout(() => {
-            // Force the new matchup to get its full intro animation.
-            window.lastHeroMatchKey = null;
-            renderHero();
-          }, Math.max(0, 5900 - heroResultAge));
-        }
-
-        return;
-      }
-    }
-
-    if(live){
-      const totalRounds = state.bracket.rounds.length;
-
-      const matchKey =
-        live.ri + '-' +
-        live.mi + '-' +
-        live.match.p1.name + '-' +
-        live.match.p2.name;
-
-      if(window.lastHeroMatchKey !== matchKey){
-        window.lastHeroMatchKey = matchKey;
-
-        if(window.heroIntroTimer){
-          clearTimeout(window.heroIntroTimer);
-        }
-
-        hero.className = 'hero hero-intro';
-
-        hero.innerHTML =
-          '<div class="hero-tag">Now On The Tee</div>' +
-          '<div class="hero-round-big">' +
-            roundLabel(live.ri, totalRounds) +
-          '</div>' +
-          '<div class="hero-matchup">' +
-            '<div class="hero-name">' +
-              escapeHtml(live.match.p1.name) +
-            '</div>' +
-            '<div class="hero-vs">VS</div>' +
-            '<div class="hero-name">' +
-              escapeHtml(live.match.p2.name) +
-            '</div>' +
-          '</div>';
-
-        window.heroIntroTimer = setTimeout(() => {
-          hero.classList.add('hero-exit');
-
-          setTimeout(() => {
-            hero.className = 'hero hero-hidden';
-            hero.innerHTML = '';
-            fitBracketToScreen();
-          }, 1500);
-
-        }, 10500);
-      }
-
-      return;
-    }
-    window.lastHeroMatchKey = null;
+  if(heroRoundComplete && heroResultAge < 5900){
 
     if(window.heroIntroTimer){
       clearTimeout(window.heroIntroTimer);
       window.heroIntroTimer = null;
     }
+
+    hero.className = 'hero hero-hidden';
+    hero.innerHTML = '';
+
+    const holdKey =
+      latestHeroResult.ri + '-' + latestHeroResult.ts;
+
+    if(window.heroRoundHoldKey !== holdKey){
+      window.heroRoundHoldKey = holdKey;
+
+      clearTimeout(window.heroRoundHoldTimer);
+
+      window.heroRoundHoldTimer = setTimeout(() => {
+        // Force the new matchup to get its full intro animation.
+        window.lastHeroMatchKey = null;
+        renderHero();
+      }, Math.max(0, 5900 - heroResultAge));
+    }
+
+    return;
+  }
+}
+
+    if(live){
+  const totalRounds = state.bracket.rounds.length;
+
+  const matchKey =
+    live.ri + '-' +
+    live.mi + '-' +
+    live.match.p1.name + '-' +
+    live.match.p2.name;
+
+  if(window.lastHeroMatchKey !== matchKey){
+    window.lastHeroMatchKey = matchKey;
+
+    if(window.heroIntroTimer){
+      clearTimeout(window.heroIntroTimer);
+    }
+
+    hero.className = 'hero hero-intro';
+
+    hero.innerHTML =
+      '<div class="hero-tag">Now On The Tee</div>' +
+      '<div class="hero-round-big">' +
+        roundLabel(live.ri, totalRounds) +
+      '</div>' +
+      '<div class="hero-matchup">' +
+        '<div class="hero-name">' +
+          escapeHtml(live.match.p1.name) +
+        '</div>' +
+        '<div class="hero-vs">VS</div>' +
+        '<div class="hero-name">' +
+          escapeHtml(live.match.p2.name) +
+        '</div>' +
+      '</div>';
+
+    // Keep the active matchup on the TV until its result is entered.
+  }
+
+  return;
+}
+window.lastHeroMatchKey = null;
+
+if(window.heroIntroTimer){
+  clearTimeout(window.heroIntroTimer);
+  window.heroIntroTimer = null;
+}
     if(state.bracket){
       hero.className = 'hero empty-hero';
       hero.textContent = 'Bracket in progress…';
@@ -1439,14 +1430,34 @@ renderAll();
   }
 
   function computeCenters(numRound0, totalRounds){
+    if(numRound0 <= 1) return [[MH/2]];
     const centers = [];
-    const r0 = [];
-    for(let i=0;i<numRound0;i++) r0.push(i*(MH+G) + MH/2);
-    centers.push(r0);
+    const firstHalfCount = numRound0 / 2;
+    const firstRound = [];
+    for(let i=0;i<firstHalfCount;i++){
+      firstRound.push(i*(MH+G) + MH/2);
+    }
+    // Keep the left and right halves in matching rows instead of placing
+    // one half above the other like opposite corners.
+    centers.push(firstRound.concat(firstRound));
     for(let r=1;r<totalRounds;r++){
       const prev = centers[r-1];
       const cur = [];
-      for(let i=0;i<prev.length/2;i++) cur.push((prev[2*i]+prev[2*i+1])/2);
+      if(prev.length === 2){
+        cur.push((prev[0]+prev[1])/2);
+        centers.push(cur);
+        continue;
+      }
+      const prevHalfCount = prev.length / 2;
+      const matchesPerSide = prevHalfCount / 2;
+      const leftCenters = [];
+      const rightCenters = [];
+      for(let i=0;i<matchesPerSide;i++){
+        leftCenters.push((prev[2*i]+prev[2*i+1])/2);
+        const rightStart = prevHalfCount + 2*i;
+        rightCenters.push((prev[rightStart]+prev[rightStart+1])/2);
+      }
+      cur.push(...leftCenters, ...rightCenters);
       centers.push(cur);
     }
     return centers;
@@ -1465,22 +1476,38 @@ renderAll();
 
     const rounds = state.bracket.rounds;
     const totalRounds = rounds.length;
-    const depth = totalRounds - 1;
+    const liveMatch = findLiveMatch();
+    const quarterfinalRound = totalRounds - 3;
+    const collapseEarlyRounds = totalRounds >= 4 &&
+      (state.champion || (liveMatch && liveMatch.ri >= quarterfinalRound));
+    const startRound = collapseEarlyRounds ? quarterfinalRound : 0;
+    const visibleRounds = rounds.slice(startRound);
+    const depth = visibleRounds.length - 1;
     const step = CW + RG;
-    const centers = computeCenters(rounds[0].length, totalRounds);
+    const centers = computeCenters(visibleRounds[0].length, visibleRounds.length);
     const containerHeight = centers[0][centers[0].length - 1] + MH/2 + 30;
     const finalX = depth * step;
     const containerWidth = 2 * depth * step + CW;
 
     function leftX(ri){ return ri * step; }
     function rightX(ri){ return (2 * depth - ri) * step; }
+    function boxSize(ri, match){
+      const actualRi = startRound + ri;
+      const isLateRound = actualRi >= quarterfinalRound;
+      const hasNames = !!(match.p1 || match.p2 || match.winner);
+      return isLateRound && !hasNames ? {w:112, h:30} : {w:CW, h:MH};
+    }
+    function boxLeft(ri, mi, side){
+      const size = boxSize(ri, visibleRounds[ri][mi]);
+      const lane = side === 'left' ? leftX(ri) : rightX(ri);
+      return lane + (CW-size.w)/2;
+    }
 
     wrap.style.height = containerHeight + 'px';
     wrap.style.width = containerWidth + 'px';
     wrap.dataset.rawWidth = containerWidth;
     wrap.dataset.rawHeight = containerHeight;
 
-    // Keep completed winners highlighted as the bracket fills in.
     const currentWinners = {};
     rounds.forEach((round, ri) => round.forEach((m, mi) => {
       currentWinners[ri+'-'+mi] = m.winner ? m.winner.id : null;
@@ -1495,64 +1522,70 @@ renderAll();
 
     let html = '<svg width="' + containerWidth + '" height="' + containerHeight + '">';
 
-    // Connect each half of the bracket toward the center.
+    // Draw mirrored left and right halves that meet at the championship.
     for(let ri=0; ri<depth-1; ri++){
-      const nextRound = rounds[ri+1];
+      const nextRound = visibleRounds[ri+1];
       const halfParents = nextRound.length / 2;
-
-      for(let parent=0; parent<halfParents; parent++){
+      for(let parent=0; parent<nextRound.length; parent++){
+        const side = parent < halfParents ? 'left' : 'right';
         const childA = parent*2, childB = childA+1;
-        const x1 = leftX(ri)+CW, x2 = leftX(ri+1), xMid = (x1+x2)/2;
+        const sizeA = boxSize(ri, visibleRounds[ri][childA]);
+        const sizeB = boxSize(ri, visibleRounds[ri][childB]);
+        const parentSize = boxSize(ri+1, nextRound[parent]);
+        const childALeft = boxLeft(ri, childA, side);
+        const childBLeft = boxLeft(ri, childB, side);
+        const parentLeft = boxLeft(ri+1, parent, side);
+        const edgeA = side === 'left' ? childALeft+sizeA.w : childALeft;
+        const edgeB = side === 'left' ? childBLeft+sizeB.w : childBLeft;
+        const parentEdge = side === 'left' ? parentLeft : parentLeft+parentSize.w;
+        const xMid = (edgeA+parentEdge)/2;
         const yA = centers[ri][childA], yB = centers[ri][childB], yP = centers[ri+1][parent];
         const resolved = nextRound[parent].p1 && nextRound[parent].p2;
         const color = resolved ? 'rgba(255,222,89,.55)' : 'rgba(29,63,92,1)';
-        html += '<line x1="'+x1+'" y1="'+yA+'" x2="'+xMid+'" y2="'+yA+'" stroke="'+color+'" stroke-width="2"/>';
-        html += '<line x1="'+x1+'" y1="'+yB+'" x2="'+xMid+'" y2="'+yB+'" stroke="'+color+'" stroke-width="2"/>';
+        html += '<line x1="'+edgeA+'" y1="'+yA+'" x2="'+xMid+'" y2="'+yA+'" stroke="'+color+'" stroke-width="2"/>';
+        html += '<line x1="'+edgeB+'" y1="'+yB+'" x2="'+xMid+'" y2="'+yB+'" stroke="'+color+'" stroke-width="2"/>';
         html += '<line x1="'+xMid+'" y1="'+yA+'" x2="'+xMid+'" y2="'+yB+'" stroke="'+color+'" stroke-width="2"/>';
-        html += '<line x1="'+xMid+'" y1="'+yP+'" x2="'+x2+'" y2="'+yP+'" stroke="'+color+'" stroke-width="2"/>';
-      }
-
-      for(let parent=halfParents; parent<nextRound.length; parent++){
-        const childA = parent*2, childB = childA+1;
-        const x1 = rightX(ri), x2 = rightX(ri+1)+CW, xMid = (x1+x2)/2;
-        const yA = centers[ri][childA], yB = centers[ri][childB], yP = centers[ri+1][parent];
-        const resolved = nextRound[parent].p1 && nextRound[parent].p2;
-        const color = resolved ? 'rgba(255,222,89,.55)' : 'rgba(29,63,92,1)';
-        html += '<line x1="'+x1+'" y1="'+yA+'" x2="'+xMid+'" y2="'+yA+'" stroke="'+color+'" stroke-width="2"/>';
-        html += '<line x1="'+x1+'" y1="'+yB+'" x2="'+xMid+'" y2="'+yB+'" stroke="'+color+'" stroke-width="2"/>';
-        html += '<line x1="'+xMid+'" y1="'+yA+'" x2="'+xMid+'" y2="'+yB+'" stroke="'+color+'" stroke-width="2"/>';
-        html += '<line x1="'+xMid+'" y1="'+yP+'" x2="'+x2+'" y2="'+yP+'" stroke="'+color+'" stroke-width="2"/>';
+        html += '<line x1="'+xMid+'" y1="'+yP+'" x2="'+parentEdge+'" y2="'+yP+'" stroke="'+color+'" stroke-width="2"/>';
       }
     }
 
-    // Join the two finalists to the single championship match in the middle.
+    // Bring the two semifinals into one centered final box.
     if(depth > 0){
-      const finalMatch = rounds[depth][0];
+      const finalMatch = visibleRounds[depth][0];
+      const finalSize = boxSize(depth, finalMatch);
+      const leftSemi = visibleRounds[depth-1][0];
+      const rightSemiIndex = visibleRounds[depth-1].length-1;
+      const rightSemi = visibleRounds[depth-1][rightSemiIndex];
+      const leftSize = boxSize(depth-1, leftSemi);
+      const rightSize = boxSize(depth-1, rightSemi);
+      const leftStart = boxLeft(depth-1, 0, 'left')+leftSize.w;
+      const leftEnd = finalX+(CW-finalSize.w)/2;
+      const rightStart = boxLeft(depth-1, rightSemiIndex, 'right');
+      const rightEnd = finalX+(CW+finalSize.w)/2;
       const finalY = centers[depth][0];
       const leftY = centers[depth-1][0];
-      const rightY = centers[depth-1][centers[depth-1].length-1];
+      const rightY = centers[depth-1][rightSemiIndex];
       const color = finalMatch.p1 && finalMatch.p2 ? 'rgba(255,222,89,.55)' : 'rgba(29,63,92,1)';
-      const leftStart = leftX(depth-1)+CW, leftEnd = finalX;
-      const rightStart = rightX(depth-1), rightEnd = finalX+CW;
       const leftMid = (leftStart+leftEnd)/2, rightMid = (rightStart+rightEnd)/2;
       html += '<path d="M '+leftStart+' '+leftY+' H '+leftMid+' V '+finalY+' H '+leftEnd+'" fill="none" stroke="'+color+'" stroke-width="2"/>';
       html += '<path d="M '+rightStart+' '+rightY+' H '+rightMid+' V '+finalY+' H '+rightEnd+'" fill="none" stroke="'+color+'" stroke-width="2"/>';
     }
     html += '</svg>';
 
-    // Show every round at all times. The final stays in the center, with each
-    // half's earlier rounds mirrored outward from it.
-    rounds.forEach((round, ri) => {
+    visibleRounds.forEach((round, ri) => {
+      const actualRi = startRound + ri;
       const isFinal = ri === depth;
       if(isFinal){
-        html += '<div class="round-col-label" style="left:'+finalX+'px;">' + roundLabel(ri, totalRounds) + '</div>';
+        html += '<div class="round-col-label" style="left:'+finalX+'px; width:'+CW+'px; text-align:center;">' + roundLabel(actualRi, totalRounds) + '</div>';
       } else {
-        html += '<div class="round-col-label" style="left:'+leftX(ri)+'px;">' + roundLabel(ri, totalRounds) + '</div>';
-        html += '<div class="round-col-label" style="left:'+rightX(ri)+'px;">' + roundLabel(ri, totalRounds) + '</div>';
+        html += '<div class="round-col-label" style="left:'+leftX(ri)+'px; width:'+CW+'px; text-align:center;">' + roundLabel(actualRi, totalRounds) + '</div>';
+        html += '<div class="round-col-label" style="left:'+rightX(ri)+'px; width:'+CW+'px; text-align:center;">' + roundLabel(actualRi, totalRounds) + '</div>';
       }
       round.forEach((m, mi) => {
-        const top = centers[ri][mi] - MH/2;
-        const left = isFinal ? finalX : (mi < round.length/2 ? leftX(ri) : rightX(ri));
+        const side = isFinal || mi < round.length/2 ? 'left' : 'right';
+        const size = boxSize(ri, m);
+        const top = centers[ri][mi] - size.h/2;
+        const left = isFinal ? finalX+(CW-size.w)/2 : boxLeft(ri, mi, side);
         let cls = 'match-box';
         let inner = '';
 
@@ -1565,15 +1598,12 @@ renderAll();
         } else {
           const p1win = m.winner && m.winner.id === m.p1.id;
           const p2win = m.winner && m.winner.id === m.p2.id;
-          if(!m.winner){
-            const live = findLiveMatch();
-            if(live && live.ri === ri && live.mi === mi) cls += ' live';
-          }
+          if(!m.winner && liveMatch && liveMatch.ri === actualRi && liveMatch.mi === mi) cls += ' live';
           inner = '<div class="mb-side'+(p1win?' winner':'')+'"><span class="mb-name">' + escapeHtml(m.p1.name) + '</span><span class="mb-dist">' + (m.winner ? fmtDist(m.d1) : '') + '</span></div>' +
                   '<div class="mb-side'+(p2win?' winner':'')+'"><span class="mb-name">' + escapeHtml(m.p2.name) + '</span><span class="mb-dist">' + (m.winner ? fmtDist(m.d2) : '') + '</span></div>';
-          if(newlyResolved.has(ri+'-'+mi)) cls += ' score-pop';
+          if(newlyResolved.has(actualRi+'-'+mi)) cls += ' score-pop';
         }
-        html += '<div class="'+cls+'" style="left:'+left+'px; top:'+top+'px; width:'+CW+'px; height:'+MH+'px;">' + inner + '</div>';
+        html += '<div class="'+cls+'" data-round="'+actualRi+'" data-match="'+mi+'" style="left:'+left+'px; top:'+top+'px; width:'+size.w+'px; height:'+size.h+'px;">' + inner + '</div>';
       });
     });
 
@@ -1584,21 +1614,24 @@ renderAll();
   function fitBracketToScreen(){
     const scrollEl = document.getElementById('bracket-scroll');
     const wrap = document.getElementById('bracket-wrap');
-    if(!scrollEl || !wrap || !wrap.dataset.rawWidth) return;
+    if(!scrollEl || !wrap || !wrap.dataset.rawWidth || !wrap.dataset.rawHeight) return;
 
     const rawW = parseFloat(wrap.dataset.rawWidth);
+    const rawH = parseFloat(wrap.dataset.rawHeight);
     const cs = getComputedStyle(scrollEl);
     const padW = (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.paddingRight) || 0);
+    const padH = (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0);
     const usableW = Math.max(100, scrollEl.clientWidth - padW - 20);
+    const usableH = Math.max(100, scrollEl.clientHeight - padH - 16);
+    const scale = Math.min(1.25, usableW / rawW, usableH / rawH);
 
-    // Keep the established match-box styling readable and scroll when the field is large.
-    const scale = Math.min(1.25, Math.max(0.85, usableW / rawW));
-    wrap.style.transformOrigin = 'top left';
+    // Fit the complete bracket into the TV area so viewers never need to scroll.
+    wrap.style.transformOrigin = 'center center';
     wrap.style.transform = `scale(${scale})`;
-    scrollEl.style.overflow = 'auto';
-    scrollEl.style.justifyContent = 'flex-start';
-    scrollEl.style.alignItems = 'flex-start';
-  }
+    scrollEl.style.overflow = 'hidden';
+    scrollEl.style.justifyContent = 'center';
+    scrollEl.style.alignItems = 'center';
+}
   let fitResizeTimer = null;
   window.addEventListener('resize', () => {
     clearTimeout(fitResizeTimer);
@@ -1760,23 +1793,23 @@ renderAll();
   });
 
   document.getElementById('mode-toggle').addEventListener('click', () => {
-    const disp = document.getElementById('view-display');
-    const adm = document.getElementById('view-admin');
-    const btn = document.getElementById('mode-toggle');
+  const disp = document.getElementById('view-display');
+  const adm = document.getElementById('view-admin');
+  const btn = document.getElementById('mode-toggle');
 
-    if(adm.style.display === 'none'){
-      disp.style.display = 'none';
-      adm.style.display = 'block';
-      btn.textContent = 'TV Display';
-      document.body.classList.remove('tv-mode');
-    } else {
-      adm.style.display = 'none';
-      disp.style.display = 'flex';
-      btn.textContent = 'Admin View';
-      document.body.classList.add('tv-mode');
-      fitBracketToScreen();
-    }
-  });
+  if(adm.style.display === 'none'){
+    disp.style.display = 'none';
+    adm.style.display = 'block';
+    btn.textContent = 'TV Display';
+    document.body.classList.remove('tv-mode');
+  } else {
+    adm.style.display = 'none';
+    disp.style.display = 'flex';
+    btn.textContent = 'Admin View';
+    document.body.classList.add('tv-mode');
+    fitBracketToScreen();
+  }
+});
 
   document.getElementById('save-event-btn').addEventListener('click', () => {
     state.eventName = document.getElementById('input-event-name').value.trim() || 'Night Golf Event';
