@@ -421,10 +421,10 @@ body.tv-mode .hero{
   z-index:6;
   left:28px;
   right:28px;
-  top:50%;
+  top:56px;
   width:auto;
   margin:0;
-  transform:translateY(-50%);
+  transform:translateY(0);
   min-height:112px;
   padding:12px 20px;
   gap:8px;
@@ -441,13 +441,13 @@ body.tv-mode .hero-exit{
 }
 
 @keyframes heroOverlayIn{
-  from{opacity:0; transform:translateY(calc(-50% - 18px));}
-  to{opacity:1; transform:translateY(-50%);}
+  from{opacity:0; transform:translateY(-18px);}
+  to{opacity:1; transform:translateY(0);}
 }
 
 @keyframes heroOverlayOut{
-  from{opacity:1; transform:translateY(-50%);}
-  to{opacity:0; transform:translateY(calc(-50% - 18px));}
+  from{opacity:1; transform:translateY(0);}
+  to{opacity:0; transform:translateY(-18px);}
 }
 
 body.tv-mode .hero-round-big{font-size:50px;}
@@ -1549,10 +1549,8 @@ if(window.heroFadeTimer){
     const rounds = state.bracket.rounds;
     const totalRounds = rounds.length;
     const liveMatch = findLiveMatch();
-    const quarterfinalRound = totalRounds - 3;
-    const collapseEarlyRounds = totalRounds >= 4 &&
-      (state.champion || (liveMatch && liveMatch.ri >= quarterfinalRound));
-    const startRound = collapseEarlyRounds ? quarterfinalRound : 0;
+    // Once a new round has a live match, clear completed rounds from the TV.
+    const startRound = liveMatch ? liveMatch.ri : (state.champion ? totalRounds-1 : 0);
     const visibleRounds = rounds.slice(startRound);
     const depth = visibleRounds.length - 1;
     const step = CW + RG;
@@ -1564,10 +1562,8 @@ if(window.heroFadeTimer){
     function leftX(ri){ return ri * step; }
     function rightX(ri){ return (2 * depth - ri) * step; }
     function boxSize(ri, match){
-      const actualRi = startRound + ri;
-      const isLateRound = actualRi >= quarterfinalRound;
       const hasNames = !!(match.p1 || match.p2 || match.winner);
-      return isLateRound && !hasNames ? {w:112, h:30} : {w:CW, h:MH};
+      return !hasNames ? {w:112, h:30} : {w:CW, h:MH};
     }
     function boxLeft(ri, mi, side){
       const size = boxSize(ri, visibleRounds[ri][mi]);
@@ -1695,7 +1691,7 @@ if(window.heroFadeTimer){
     const padH = (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0);
     const usableW = Math.max(100, scrollEl.clientWidth - padW - 20);
     const usableH = Math.max(100, scrollEl.clientHeight - padH - 16);
-    const scale = Math.min(1.25, usableW / rawW, usableH / rawH);
+    const scale = Math.min(usableW / rawW, usableH / rawH);
 
     // Fit the complete bracket into the TV area so viewers never need to scroll.
     wrap.style.left = '50%';
