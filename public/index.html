@@ -380,12 +380,11 @@
   .bracket-scroll{flex:1;
   min-height:0;
   min-width:0;
-  overflow:auto;
+  overflow:hidden;
   padding:0 28px 60px;
   display:flex;
-  align-items:flex-start;
-  justify-content:flex-start;
-  overscroll-behavior:contain;
+  align-items:center;
+  justify-content:center;
 }
   body.tv-mode{
   overflow:hidden;
@@ -401,7 +400,6 @@ body.tv-mode #view-display{
   flex:1;
   min-height:0;
   overflow:hidden;
-  position:relative;
 }
 
 body.tv-mode .hole-head,
@@ -410,61 +408,19 @@ body.tv-mode .hero{
 }
 
 body.tv-mode .hole-head{
-  padding:8px 22px 4px;
+  padding:12px 28px 8px;
   align-items:center;
 }
-
-body.tv-mode .hole-number{font-size:42px;}
-
-body.tv-mode .hero{
-  position:absolute;
-  z-index:6;
-  left:28px;
-  right:28px;
-  top:56px;
-  width:auto;
-  margin:0;
-  transform:translateY(0);
-  min-height:112px;
-  padding:12px 20px;
-  gap:8px;
-}
-
-body.tv-mode .hero-intro{
-  animation-name:heroOverlayIn;
-}
-
-body.tv-mode .hero-exit{
-  animation-name:heroOverlayOut;
-  min-height:112px !important;
-  border-width:1px;
-}
-
-@keyframes heroOverlayIn{
-  from{opacity:0; transform:translateY(-18px);}
-  to{opacity:1; transform:translateY(0);}
-}
-
-@keyframes heroOverlayOut{
-  from{opacity:1; transform:translateY(0);}
-  to{opacity:0; transform:translateY(-18px);}
-}
-
-body.tv-mode .hero-round-big{font-size:50px;}
-body.tv-mode .hero-name{font-size:28px;}
-body.tv-mode .hero-vs{font-size:15px;}
 
 body.tv-mode .bracket-scroll{
   flex:1;
   min-height:0;
-  position:relative;
   overflow:hidden;
-  padding:0 18px 42px;
+  padding-bottom:52px;
 }
  .bracket-wrap{
-  position:absolute;
+  position:relative;
   min-height:100px;
-  margin:0;
   transition:transform .9s cubic-bezier(.2,.8,.2,1);
   transform-origin:center center;
   will-change:transform;
@@ -509,7 +465,7 @@ body.tv-mode .bracket-scroll{
   .match-box .mb-side .mb-name{white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:140px;}
   .match-box .mb-side .mb-dist{font-family:var(--font-mono); font-size:13px; font-weight:800; flex-shrink:0;}
   .match-box.bye .mb-side{color:var(--steel-dim); font-style:italic; font-weight:600;}
-  .match-box.tbd{align-items:center; justify-content:center; color:var(--steel-dim); font-family:var(--font-cond); letter-spacing:.06em; text-transform:uppercase; font-size:13px;}
+  .match-box.tbd{align-items:center; justify-content:center; color:var(--steel-dim); font-family:var(--font-cond); letter-spacing:.06em; text-transform:uppercase; font-size:12px;}
   @keyframes scorePop{
     0%{ transform:scale(1); box-shadow:none; }
     18%{ transform:scale(1.16); box-shadow:0 0 0 2px var(--gold), 0 0 28px rgba(240,168,58,.85); }
@@ -800,7 +756,7 @@ body.tv-mode .bracket-scroll{
       </div>
 
       <div class="card" id="matches-card" style="display:none;">
-        <h2>Enter Results <button class="btn secondary small" id="undo-result-btn" disabled>Undo Last Result</button></h2>
+        <h2>Enter Results</h2>
         <div id="admin-matches"></div>
       </div>
 
@@ -828,7 +784,7 @@ body.tv-mode .bracket-scroll{
 
 <script>
 (function(){
-  const MH = 84, G = 14, CW = 250, RG = 32; // bracket geometry (px) — sized for bold, room-readable text
+  const MH = 76, G = 18, CW = 230, RG = 58; // bracket geometry (px) — sized for bold, room-readable text
 
   let state = {
     eventName: 'Night Golf Event',
@@ -838,8 +794,7 @@ body.tv-mode .bracket-scroll{
     bracket: null,       // { rounds: [ [match, ...], ... ] }
     champion: null,       // {id, name}
     championDismissed: false, // lets the champion screen be exited without losing who won
-    resultsLog: [],       // [{roundLabel, winner, loser, dist, ts}]
-    undoHistory: []       // snapshots of bracket/results before each scored match
+    resultsLog: []        // [{roundLabel, winner, loser, dist, ts}]
   };
 
   let saveTimer = null;
@@ -875,7 +830,6 @@ body.tv-mode .bracket-scroll{
         console.error('Failed to parse stored event data', e);
       }
     }
-    if(!Array.isArray(state.undoHistory)) state.undoHistory = [];
     renderAll();
   }
 
@@ -1083,7 +1037,6 @@ body.tv-mode .bracket-scroll{
 
     renderPlayerChips();
     renderGenerateButton();
-    renderUndoButton();
     renderAdminMatches();
 
     renderHoleHead();
@@ -1118,14 +1071,6 @@ body.tv-mode .bracket-scroll{
     const btn = document.getElementById('generate-bracket-btn');
     btn.textContent = state.bracket ? 'Regenerate Bracket' : 'Generate Bracket';
     btn.disabled = state.players.length < 2;
-  }
-
-  function renderUndoButton(){
-    const btn = document.getElementById('undo-result-btn');
-    if(!btn) return;
-    const canUndo = Array.isArray(state.undoHistory) && state.undoHistory.length > 0;
-    btn.disabled = !canUndo;
-    btn.textContent = 'Undo Last Result';
   }
 
   function renderAdminMatches(){
@@ -1212,33 +1157,12 @@ return '<div class="match-card ready" data-round="' + ri + '" data-match="' + mi
 '</div>';
   }
 
-  document.getElementById('undo-result-btn').addEventListener('click', () => {
-    const history = Array.isArray(state.undoHistory) ? state.undoHistory.slice() : [];
-    const previous = history.pop();
-    if(!previous) return;
-    state.bracket = previous.bracket;
-    state.champion = previous.champion || null;
-    state.championDismissed = !!previous.championDismissed;
-    state.resultsLog = previous.resultsLog || [];
-    state.undoHistory = history;
-    prevWinnersSnapshot = null;
-    scheduleSave();
-    renderAll();
-    setBracketStatus('Last result undone. You can enter it again.', false);
-  });
-
   document.getElementById('admin-matches').addEventListener('click', (e) => {
     const btn = e.target.closest('.declare-btn');
     if(!btn) return;
     const card = btn.closest('.match-card');
     const ri = parseInt(card.dataset.round, 10);
     const mi = parseInt(card.dataset.match, 10);
-    const undoSnapshot = {
-      bracket: JSON.parse(JSON.stringify(state.bracket)),
-      champion: state.champion ? {...state.champion} : null,
-      championDismissed: state.championDismissed,
-      resultsLog: JSON.parse(JSON.stringify(state.resultsLog || []))
-    };
    const sides = card.querySelectorAll('.match-side');
 const dists = {};
 const isChampionship = card.classList.contains('championship-entry');
@@ -1312,7 +1236,6 @@ if(isChampionship){
   winnerId = btn.dataset.playerId;
 }
 
-state.undoHistory = (state.undoHistory || []).concat([undoSnapshot]).slice(-20);
 resolveMatch(ri, mi, winnerId, dists.p1, dists.p2);
 scheduleSave();
 renderAll();
@@ -1350,10 +1273,6 @@ renderAll();
           clearTimeout(window.heroIntroTimer);
           window.heroIntroTimer = null;
         }
-        if(window.heroFadeTimer){
-          clearTimeout(window.heroFadeTimer);
-          window.heroFadeTimer = null;
-        }
         hero.className = 'hero hero-hidden';
         hero.innerHTML = '';
         fitBracketToScreen();
@@ -1384,10 +1303,6 @@ if(latestHeroResult && typeof latestHeroResult.ri === 'number'){
     if(window.heroIntroTimer){
       clearTimeout(window.heroIntroTimer);
       window.heroIntroTimer = null;
-    }
-    if(window.heroFadeTimer){
-      clearTimeout(window.heroFadeTimer);
-      window.heroFadeTimer = null;
     }
 
     hero.className = 'hero hero-hidden';
@@ -1426,11 +1341,6 @@ if(latestHeroResult && typeof latestHeroResult.ri === 'number'){
 
     if(window.heroIntroTimer){
       clearTimeout(window.heroIntroTimer);
-      window.heroIntroTimer = null;
-    }
-    if(window.heroFadeTimer){
-      clearTimeout(window.heroFadeTimer);
-      window.heroFadeTimer = null;
     }
 
     hero.className = 'hero hero-intro';
@@ -1450,20 +1360,16 @@ if(latestHeroResult && typeof latestHeroResult.ri === 'number'){
         '</div>' +
       '</div>';
 
-    // Show the new matchup for the intro, then clear the space for the bracket.
     window.heroIntroTimer = setTimeout(() => {
-      if(window.lastHeroMatchKey !== matchKey) return;
-      hero.classList.remove('hero-intro');
       hero.classList.add('hero-exit');
-      window.heroFadeTimer = setTimeout(() => {
-        if(window.lastHeroMatchKey !== matchKey) return;
+
+      setTimeout(() => {
         hero.className = 'hero hero-hidden';
         hero.innerHTML = '';
-        window.heroIntroTimer = null;
-        window.heroFadeTimer = null;
         fitBracketToScreen();
       }, 1500);
-    }, 9000);
+
+    }, 10500);
   }
 
   return;
@@ -1473,10 +1379,6 @@ window.lastHeroMatchKey = null;
 if(window.heroIntroTimer){
   clearTimeout(window.heroIntroTimer);
   window.heroIntroTimer = null;
-}
-if(window.heroFadeTimer){
-  clearTimeout(window.heroFadeTimer);
-  window.heroFadeTimer = null;
 }
     if(state.bracket){
       hero.className = 'hero empty-hero';
@@ -1502,34 +1404,14 @@ if(window.heroFadeTimer){
   }
 
   function computeCenters(numRound0, totalRounds){
-    if(numRound0 <= 1) return [[30 + MH/2]];
     const centers = [];
-    const firstHalfCount = numRound0 / 2;
-    const firstRound = [];
-    for(let i=0;i<firstHalfCount;i++){
-      firstRound.push(30 + i*(MH+G) + MH/2);
-    }
-    // Keep the left and right halves in matching rows instead of placing
-    // one half above the other like opposite corners.
-    centers.push(firstRound.concat(firstRound));
+    const r0 = [];
+    for(let i=0;i<numRound0;i++) r0.push(i*(MH+G) + MH/2);
+    centers.push(r0);
     for(let r=1;r<totalRounds;r++){
       const prev = centers[r-1];
       const cur = [];
-      if(prev.length === 2){
-        cur.push((prev[0]+prev[1])/2);
-        centers.push(cur);
-        continue;
-      }
-      const prevHalfCount = prev.length / 2;
-      const matchesPerSide = prevHalfCount / 2;
-      const leftCenters = [];
-      const rightCenters = [];
-      for(let i=0;i<matchesPerSide;i++){
-        leftCenters.push((prev[2*i]+prev[2*i+1])/2);
-        const rightStart = prevHalfCount + 2*i;
-        rightCenters.push((prev[rightStart]+prev[rightStart+1])/2);
-      }
-      cur.push(...leftCenters, ...rightCenters);
+      for(let i=0;i<prev.length/2;i++) cur.push((prev[2*i]+prev[2*i+1])/2);
       centers.push(cur);
     }
     return centers;
@@ -1540,42 +1422,115 @@ if(window.heroFadeTimer){
     if(!state.bracket){
       wrap.innerHTML = '';
       wrap.style.height = '0';
-      wrap.style.width = '0';
-      wrap.dataset.rawWidth = '';
       prevWinnersSnapshot = null;
       return;
     }
+   const rounds = state.bracket.rounds;
+const totalRounds = rounds.length;
 
-    const rounds = state.bracket.rounds;
-    const totalRounds = rounds.length;
-    const liveMatch = findLiveMatch();
-    // Once a new round has a live match, clear completed rounds from the TV.
-    const startRound = liveMatch ? liveMatch.ri : (state.champion ? totalRounds-1 : 0);
-    const visibleRounds = rounds.slice(startRound);
-    const depth = visibleRounds.length - 1;
-    const step = CW + RG;
-    const centers = computeCenters(visibleRounds[0].length, visibleRounds.length);
-    const containerHeight = centers[0][centers[0].length - 1] + MH/2 + 30;
-    const finalX = depth * step;
-    const containerWidth = 2 * depth * step + CW;
+// Find the first round that still has an undecided match.
+// Every fully completed round before it will disappear from the TV bracket.
+let firstVisibleRound = rounds.findIndex(round =>
+  round.some(match => !match.winner)
+);
 
-    function leftX(ri){ return ri * step; }
-    function rightX(ri){ return (2 * depth - ri) * step; }
-    function boxSize(ri, match){
-      const hasNames = !!(match.p1 || match.p2 || match.winner);
-      return !hasNames ? {w:150, h:42} : {w:CW, h:MH};
+if(firstVisibleRound === -1){
+  firstVisibleRound = Math.max(0, totalRounds - 1);
+}
+    const latestResult = state.resultsLog && state.resultsLog[0];
+
+if(latestResult && typeof latestResult.ri === 'number'){
+  const resultAge = Date.now() - latestResult.ts;
+
+  const finishedRound = rounds[latestResult.ri];
+  const roundIsComplete =
+    finishedRound &&
+    finishedRound.every(match => match.winner);
+
+  if(
+    roundIsComplete &&
+    resultAge < 5000 &&
+    latestResult.ri < totalRounds - 1
+  ){
+    firstVisibleRound = Math.min(
+      firstVisibleRound,
+      latestResult.ri
+    );
+  }
+}
+// Smooth transition when a round has just finished
+if(latestResult && typeof latestResult.ri === 'number'){
+  const transitionAge = Date.now() - latestResult.ts;
+  const transitionRound = rounds[latestResult.ri];
+
+  const transitionRoundComplete =
+    transitionRound &&
+    transitionRound.every(match => match.winner) &&
+    latestResult.ri < totalRounds - 1;
+
+  if(transitionRoundComplete){
+
+    // During the final second of the 5-second result hold,
+    // gently fade the completed bracket out.
+    if(transitionAge >= 4000 && transitionAge < 5000){
+      wrap.classList.add('round-collapse-out');
     }
-    function boxLeft(ri, mi, side){
-      const size = boxSize(ri, visibleRounds[ri][mi]);
-      const lane = side === 'left' ? leftX(ri) : rightX(ri);
-      return lane + (CW-size.w)/2;
+
+    // Schedule one precise rebuild at the 5-second mark.
+    const transitionKey = latestResult.ri + '-' + latestResult.ts;
+
+    if(
+      transitionAge < 5000 &&
+      window.roundCollapseKey !== transitionKey
+    ){
+      window.roundCollapseKey = transitionKey;
+
+      clearTimeout(window.roundCollapseTimer);
+
+      window.roundCollapseTimer = setTimeout(() => {
+
+        wrap.classList.remove('round-collapse-out');
+
+        // Re-render now that the completed round can disappear
+        renderBracketTree();
+        fitBracketToScreen();
+
+        // Animate the smaller remaining bracket back in
+        requestAnimationFrame(() => {
+          wrap.classList.add('round-collapse-in');
+
+          setTimeout(() => {
+            wrap.classList.remove('round-collapse-in');
+          }, 900);
+        });
+
+      }, Math.max(0, 5000 - transitionAge));
     }
+  }
+}
+const visibleRounds = rounds.slice(firstVisibleRound);
+const visibleRoundCount = visibleRounds.length;
+
+const centers = computeCenters(
+  visibleRounds[0].length,
+  visibleRoundCount
+);
+
+const containerHeight =
+  centers[0][centers[0].length - 1] + MH/2 + 30;
+
+const containerWidth =
+  visibleRoundCount * CW +
+  (visibleRoundCount - 1) * RG +
+  4;
 
     wrap.style.height = containerHeight + 'px';
     wrap.style.width = containerWidth + 'px';
     wrap.dataset.rawWidth = containerWidth;
     wrap.dataset.rawHeight = containerHeight;
 
+    // Figure out which matches just got a winner since our last render, so we can
+    // give them a little celebratory pop instead of just silently updating.
     const currentWinners = {};
     rounds.forEach((round, ri) => round.forEach((m, mi) => {
       currentWinners[ri+'-'+mi] = m.winner ? m.winner.id : null;
@@ -1589,74 +1544,35 @@ if(window.heroFadeTimer){
     prevWinnersSnapshot = currentWinners;
 
     let html = '<svg width="' + containerWidth + '" height="' + containerHeight + '">';
-
-    // Draw mirrored left and right halves that meet at the championship.
-    for(let ri=0; ri<depth-1; ri++){
-      const nextRound = visibleRounds[ri+1];
-      const halfParents = nextRound.length / 2;
-      for(let parent=0; parent<nextRound.length; parent++){
-        const side = parent < halfParents ? 'left' : 'right';
-        const childA = parent*2, childB = childA+1;
-        const sizeA = boxSize(ri, visibleRounds[ri][childA]);
-        const sizeB = boxSize(ri, visibleRounds[ri][childB]);
-        const parentSize = boxSize(ri+1, nextRound[parent]);
-        const childALeft = boxLeft(ri, childA, side);
-        const childBLeft = boxLeft(ri, childB, side);
-        const parentLeft = boxLeft(ri+1, parent, side);
-        const edgeA = side === 'left' ? childALeft+sizeA.w : childALeft;
-        const edgeB = side === 'left' ? childBLeft+sizeB.w : childBLeft;
-        const parentEdge = side === 'left' ? parentLeft : parentLeft+parentSize.w;
-        const xMid = (edgeA+parentEdge)/2;
-        const yA = centers[ri][childA], yB = centers[ri][childB], yP = centers[ri+1][parent];
-        const resolved = nextRound[parent].p1 && nextRound[parent].p2;
+    for(let r=0; r<visibleRoundCount-1; r++){
+      const pairs = centers[r].length/2;
+      for(let i=0;i<pairs;i++){
+        const x1 = r*(CW+RG)+CW;
+        const xMid = x1 + RG/2;
+        const x2 = (r+1)*(CW+RG);
+        const yA = centers[r][2*i], yB = centers[r][2*i+1];
+        const yP = centers[r+1][i];
+        const parentMatch = visibleRounds[r+1][i];
+        const resolved = parentMatch.p1 && parentMatch.p2;
         const color = resolved ? 'rgba(255,222,89,.55)' : 'rgba(29,63,92,1)';
-        html += '<line x1="'+edgeA+'" y1="'+yA+'" x2="'+xMid+'" y2="'+yA+'" stroke="'+color+'" stroke-width="2"/>';
-        html += '<line x1="'+edgeB+'" y1="'+yB+'" x2="'+xMid+'" y2="'+yB+'" stroke="'+color+'" stroke-width="2"/>';
+        html += '<line x1="'+x1+'" y1="'+yA+'" x2="'+xMid+'" y2="'+yA+'" stroke="'+color+'" stroke-width="2"/>';
+        html += '<line x1="'+x1+'" y1="'+yB+'" x2="'+xMid+'" y2="'+yB+'" stroke="'+color+'" stroke-width="2"/>';
         html += '<line x1="'+xMid+'" y1="'+yA+'" x2="'+xMid+'" y2="'+yB+'" stroke="'+color+'" stroke-width="2"/>';
-        html += '<line x1="'+xMid+'" y1="'+yP+'" x2="'+parentEdge+'" y2="'+yP+'" stroke="'+color+'" stroke-width="2"/>';
+        html += '<line x1="'+xMid+'" y1="'+yP+'" x2="'+x2+'" y2="'+yP+'" stroke="'+color+'" stroke-width="2"/>';
       }
-    }
-
-    // Bring the two semifinals into one centered final box.
-    if(depth > 0){
-      const finalMatch = visibleRounds[depth][0];
-      const finalSize = boxSize(depth, finalMatch);
-      const leftSemi = visibleRounds[depth-1][0];
-      const rightSemiIndex = visibleRounds[depth-1].length-1;
-      const rightSemi = visibleRounds[depth-1][rightSemiIndex];
-      const leftSize = boxSize(depth-1, leftSemi);
-      const rightSize = boxSize(depth-1, rightSemi);
-      const leftStart = boxLeft(depth-1, 0, 'left')+leftSize.w;
-      const leftEnd = finalX+(CW-finalSize.w)/2;
-      const rightStart = boxLeft(depth-1, rightSemiIndex, 'right');
-      const rightEnd = finalX+(CW+finalSize.w)/2;
-      const finalY = centers[depth][0];
-      const leftY = centers[depth-1][0];
-      const rightY = centers[depth-1][rightSemiIndex];
-      const color = finalMatch.p1 && finalMatch.p2 ? 'rgba(255,222,89,.55)' : 'rgba(29,63,92,1)';
-      const leftMid = (leftStart+leftEnd)/2, rightMid = (rightStart+rightEnd)/2;
-      html += '<path d="M '+leftStart+' '+leftY+' H '+leftMid+' V '+finalY+' H '+leftEnd+'" fill="none" stroke="'+color+'" stroke-width="2"/>';
-      html += '<path d="M '+rightStart+' '+rightY+' H '+rightMid+' V '+finalY+' H '+rightEnd+'" fill="none" stroke="'+color+'" stroke-width="2"/>';
     }
     html += '</svg>';
 
     visibleRounds.forEach((round, ri) => {
-      const actualRi = startRound + ri;
-      const isFinal = ri === depth;
-      if(isFinal){
-        html += '<div class="round-col-label" style="left:'+finalX+'px; width:'+CW+'px; text-align:center;">' + roundLabel(actualRi, totalRounds) + '</div>';
-      } else {
-        html += '<div class="round-col-label" style="left:'+leftX(ri)+'px; width:'+CW+'px; text-align:center;">' + roundLabel(actualRi, totalRounds) + '</div>';
-        html += '<div class="round-col-label" style="left:'+rightX(ri)+'px; width:'+CW+'px; text-align:center;">' + roundLabel(actualRi, totalRounds) + '</div>';
-      }
+      html += '<div class="round-col-label" style="left:'+(ri*(CW+RG))+'px;">' + roundLabel(ri + firstVisibleRound, totalRounds) + '</div>';
       round.forEach((m, mi) => {
-        const side = isFinal || mi < round.length/2 ? 'left' : 'right';
-        const size = boxSize(ri, m);
-        const top = centers[ri][mi] - size.h/2;
-        const left = isFinal ? finalX+(CW-size.w)/2 : boxLeft(ri, mi, side);
+        const top = centers[ri][mi] - MH/2;
+        const left = ri*(CW+RG);
         let cls = 'match-box';
-        let inner = '';
+        
 
+
+        let inner = '';
         if(m.bye){
           cls += ' bye';
           inner = '<div class="mb-side"><span class="mb-name">' + escapeHtml(m.winner.name) + '</span><span class="mb-dist">bye</span></div>';
@@ -1666,12 +1582,15 @@ if(window.heroFadeTimer){
         } else {
           const p1win = m.winner && m.winner.id === m.p1.id;
           const p2win = m.winner && m.winner.id === m.p2.id;
-          if(!m.winner && liveMatch && liveMatch.ri === actualRi && liveMatch.mi === mi) cls += ' live';
+          if(!m.winner){
+            const live = findLiveMatch();
+            if(live && live.ri === (ri + firstVisibleRound) && live.mi === mi) cls += ' live';
+          }
           inner = '<div class="mb-side'+(p1win?' winner':'')+'"><span class="mb-name">' + escapeHtml(m.p1.name) + '</span><span class="mb-dist">' + (m.winner ? fmtDist(m.d1) : '') + '</span></div>' +
                   '<div class="mb-side'+(p2win?' winner':'')+'"><span class="mb-name">' + escapeHtml(m.p2.name) + '</span><span class="mb-dist">' + (m.winner ? fmtDist(m.d2) : '') + '</span></div>';
-          if(newlyResolved.has(actualRi+'-'+mi)) cls += ' score-pop';
+          if(newlyResolved.has(ri+'-'+mi)) cls += ' score-pop';
         }
-        html += '<div class="'+cls+'" data-round="'+actualRi+'" data-match="'+mi+'" style="left:'+left+'px; top:'+top+'px; width:'+size.w+'px; height:'+size.h+'px;">' + inner + '</div>';
+        html += '<div class="'+cls+'" style="left:'+left+'px; top:'+top+'px; width:'+CW+'px; height:'+MH+'px;">' + inner + '</div>';
       });
     });
 
@@ -1680,28 +1599,42 @@ if(window.heroFadeTimer){
   }
 
   function fitBracketToScreen(){
-    const scrollEl = document.getElementById('bracket-scroll');
-    const wrap = document.getElementById('bracket-wrap');
-    if(!scrollEl || !wrap || !wrap.dataset.rawWidth || !wrap.dataset.rawHeight) return;
+  const scrollEl = document.getElementById('bracket-scroll');
+  const wrap = document.getElementById('bracket-wrap');
 
-    const rawW = parseFloat(wrap.dataset.rawWidth);
-    const rawH = parseFloat(wrap.dataset.rawHeight);
-    const cs = getComputedStyle(scrollEl);
-    const padW = (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.paddingRight) || 0);
-    const padH = (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0);
-    const usableW = Math.max(100, scrollEl.clientWidth - padW - 20);
-    const usableH = Math.max(100, scrollEl.clientHeight - padH - 16);
-    const scale = Math.min(usableW / rawW, usableH / rawH);
+  if(!scrollEl || !wrap || !wrap.dataset.rawWidth) return;
 
-    // Fit the complete bracket into the TV area so viewers never need to scroll.
-    wrap.style.left = '50%';
-    wrap.style.top = '50%';
-    wrap.style.transformOrigin = 'center center';
-    wrap.style.transform = `translate(-50%, -50%) scale(${scale})`;
-    scrollEl.style.overflow = 'hidden';
-    scrollEl.style.justifyContent = 'center';
-    scrollEl.style.alignItems = 'center';
+  const rawW = parseFloat(wrap.dataset.rawWidth);
+  const rawH = parseFloat(wrap.dataset.rawHeight);
+  if(!rawW || !rawH) return;
+
+  const cs = getComputedStyle(scrollEl);
+
+  const padW =
+    (parseFloat(cs.paddingLeft) || 0) +
+    (parseFloat(cs.paddingRight) || 0);
+
+  const padH =
+    (parseFloat(cs.paddingTop) || 0) +
+    (parseFloat(cs.paddingBottom) || 0);
+
+  const usableW = Math.max(100, scrollEl.clientWidth - padW - 20);
+  const usableH = Math.max(100, scrollEl.clientHeight - padH - 20);
+
+  const scale = Math.min(
+    usableW / rawW,
+    usableH / rawH,
+    1.25
+  );
+
+  wrap.style.transformOrigin = 'center center';
+  wrap.style.transform = `scale(${scale})`;
+
+  scrollEl.style.overflow = 'hidden';
+  scrollEl.style.justifyContent = 'center';
+  scrollEl.style.alignItems = 'center';
 }
+
   let fitResizeTimer = null;
   window.addEventListener('resize', () => {
     clearTimeout(fitResizeTimer);
@@ -1932,7 +1865,7 @@ if(window.heroFadeTimer){
 
   async function performFullReset(){
     await archiveCurrentEventIfComplete();
-    state = { eventName:'Night Golf Event', eventDate:'', hole:{num:null,label:''}, players:[], bracket:null, champion:null, championDismissed:false, resultsLog:[], undoHistory:[] };
+    state = { eventName:'Night Golf Event', eventDate:'', hole:{num:null,label:''}, players:[], bracket:null, champion:null, championDismissed:false, resultsLog:[] };
     prevWinnersSnapshot = null;
     lastChampionOverlayVisible = false;
     scheduleSave();
@@ -1947,7 +1880,6 @@ if(window.heroFadeTimer){
     state.champion = null;
     state.championDismissed = false;
     state.resultsLog = [];
-    state.undoHistory = [];
     prevWinnersSnapshot = null;
     scheduleSave(); renderAll();
     setBracketStatus('Bracket generated with ' + state.players.length + ' players.', false);
@@ -1956,7 +1888,7 @@ if(window.heroFadeTimer){
   document.getElementById('reset-bracket-btn').addEventListener('click', async () => {
     if(!confirm('Clear the current bracket and results? Your player list stays intact.')) return;
     await archiveCurrentEventIfComplete();
-    state.bracket = null; state.champion = null; state.championDismissed = false; state.resultsLog = []; state.undoHistory = [];
+    state.bracket = null; state.champion = null; state.championDismissed = false; state.resultsLog = [];
     scheduleSave(); renderAll();
   });
 
