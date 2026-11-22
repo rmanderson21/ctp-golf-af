@@ -903,44 +903,84 @@ body.tv-mode .bracket-scroll{
     return a;
   }
 
-  function generateBracket(){
-    let entries = shuffled(state.players).map(player => ({player, size:1, priorByes:0}));
-    const rounds = [];
-    while(entries.length > 1){
-      // Give the single odd slot to a path with the fewest previous byes.
-      let spare = null;
-      if(entries.length % 2){
-        const least = Math.min(...entries.map(entry => entry.priorByes));
-        spare = entries.splice(entries.findIndex(entry => entry.priorByes === least), 1)[0];
+function generateBracket(){
+  const players = shuffled(state.players);
+  const rounds = [];
+  const entries = players.map(player => ({player, previousByes: 0}));
+
+  function makeMatch(group, round){
+    const match = {
+      id: uid(),
+      p1: null,
+      p2: null,
+      winner: null,
+      bye: false,
+      d1: null,
+      d2: null,
+      walkover: group.length === 1
+    };
+
+    group.forEach((entry, i) => {
+      const slot = i === 0 ? 'p1' : 'p2';
+      if(entry.match){
+        entry.match.advance = {index: round.length, slot};
       }
-      entries.sort((a,b) => a.size-b.size);
-      const groups = [];
-      for(let i=0; i<entries.length/2; i++){
-        groups.push([entries[i], entries[entries.length-1-i]]);
-      }
-      if(spare) groups.push([spare]);
-      const next = [];
-      const round = groups.map((group, index) => {
-        const match = {id:uid(), p1:null, p2:null, winner:null, bye:false,
-          d1:null, d2:null, walkover:group.length === 1};
-        group.forEach((entry, i) => {
-          const slot = i === 0 ? 'p1' : 'p2';
-          if(entry.match) entry.match.advance = {index, slot};
-          match[slot] = entry.player || null;
-        });
-        if(match.walkover && match.p1){
-          match.winner = match.p1;
-          match.bye = true;
-        }
-        next.push({match, player:match.winner, size:group.reduce((n,e)=>n+e.size,0),
-          priorByes:Math.max(...group.map(e=>e.priorByes)) + Number(match.walkover)});
-        return match;
-      });
-      rounds.push(round);
-      entries = next;
+      match[slot] = entry.player || null;
+    });
+
+    if(match.walkover && match.p1){
+      match.winner = match.p1;
+      match.bye = true;
     }
-    return {rounds};
+
+    round.push(match);
+    return {
+      match,
+      player: match.winner,
+      previousByes: Math.max(...group.map(e => e.previousByes))
+        + Number(match.walkover)
+    };
   }
+
+  // Split the field evenly. For 11 players, six go left and five go right.
+  const smaller = Math.floor(entries.length / 2);
+  const leftCount = entries.length % 2 && smaller % 2 ? smaller + 1 : smaller;
+  let halves = [entries.slice(0, leftCount), entries.slice(leftCount)];
+
+  // Keep two semifinalists on each side for fields of four or more.
+  while(halves.some(side => side.length > 2)){
+    const round = [];
+
+    halves = halves.map(side => {
+      const advancing = Math.max(2, Math.ceil(side.length / 2));
+      const byeCount = 2 * advancing - side.length;
+      const ordered = [...side].sort((a, b) => a.previousByes - b.previousByes);
+      const byes = ordered.splice(0, byeCount);
+      const next = [];
+
+      for(let i = 0; i < ordered.length; i += 2){
+        next.push(makeMatch(ordered.slice(i, i + 2), round));
+      }
+      for(const entry of byes){
+        next.push(makeMatch([entry], round));
+      }
+      return next;
+    });
+
+    rounds.push(round);
+  }
+
+  if(players.length > 2){
+    const qualifyingRound = [];
+    halves = halves.map(side => [makeMatch(side, qualifyingRound)]);
+    rounds.push(qualifyingRound);
+  }
+
+  const final = [];
+  makeMatch([halves[0][0], halves[1][0]], final);
+  rounds.push(final);
+  return {rounds, playerCount: players.length};
+}
 
   // Older saved brackets use consecutive pairs instead of explicit routes.
   function destination(match, index){
