@@ -905,83 +905,49 @@ body.tv-mode .bracket-scroll{
 
 function generateBracket(){
   const players = shuffled(state.players);
-  const rounds = [];
-  const entries = players.map(player => ({player, previousByes: 0}));
+  if(players.length < 2) return null;
 
-  function makeMatch(group, round){
-    const match = {
-      id: uid(),
-      p1: null,
-      p2: null,
-      winner: null,
-      bye: false,
-      d1: null,
-      d2: null,
-      walkover: group.length === 1
-    };
-
-    group.forEach((entry, i) => {
-      const slot = i === 0 ? 'p1' : 'p2';
-      if(entry.match){
-        entry.match.advance = {index: round.length, slot};
-      }
-      match[slot] = entry.player || null;
-    });
-
-    if(match.walkover && match.p1){
-      match.winner = match.p1;
-      match.bye = true;
-    }
-
-    round.push(match);
-    return {
-      match,
-      player: match.winner,
-      previousByes: Math.max(...group.map(e => e.previousByes))
-        + Number(match.walkover)
-    };
+  // Each pair of slots feeds one opening match.
+  let order = [1, 2];
+  while(order.length < players.length){
+    const sum = order.length * 2 + 1;
+    order = order.flatMap(seed => [seed, sum - seed]);
   }
 
-  // Split the field evenly. For 11 players, six go left and five go right.
-  const smaller = Math.floor(entries.length / 2);
-  const leftCount = entries.length % 2 && smaller % 2 ? smaller + 1 : smaller;
-  let halves = [entries.slice(0, leftCount), entries.slice(leftCount)];
+  // Put any extra opening bye on the right half of the TV.
+  if(order.length >= 4 && players.length % 2){
+    const half = order.length / 2;
+    const left = order.slice(0, half);
+    const right = order.slice(half);
+    if(left.filter(seed => seed > players.length).length >
+       right.filter(seed => seed > players.length).length){
+      order = right.concat(left);
+    }
+  }
 
-  // Keep two semifinalists on each side for fields of four or more.
-  while(halves.some(side => side.length > 2)){
+  let slots = order.map(seed => players[seed - 1] || null);
+  const rounds = [];
+
+  while(slots.length > 1){
     const round = [];
 
-    halves = halves.map(side => {
-      const advancing = Math.max(2, Math.ceil(side.length / 2));
-      const byeCount = 2 * advancing - side.length;
-      const ordered = [...side].sort((a, b) => a.previousByes - b.previousByes);
-      const byes = ordered.splice(0, byeCount);
-      const next = [];
+    for(let i = 0; i < slots.length; i += 2){
+      const p1 = slots[i];
+      const p2 = slots[i + 1];
+      const bye = rounds.length === 0 && (!p1 || !p2);
 
-      for(let i = 0; i < ordered.length; i += 2){
-        next.push(makeMatch(ordered.slice(i, i + 2), round));
-      }
-      for(const entry of byes){
-        next.push(makeMatch([entry], round));
-      }
-      return next;
-    });
+      round.push({
+        id: uid(), p1, p2, d1: null, d2: null,
+        bye, winner: bye ? (p1 || p2) : null
+      });
+    }
 
     rounds.push(round);
+    slots = round.map(match => match.winner);
   }
 
-  if(players.length > 2){
-    const qualifyingRound = [];
-    halves = halves.map(side => [makeMatch(side, qualifyingRound)]);
-    rounds.push(qualifyingRound);
-  }
-
-  const final = [];
-  makeMatch([halves[0][0], halves[1][0]], final);
-  rounds.push(final);
   return {rounds, playerCount: players.length};
 }
-
   // Older saved brackets use consecutive pairs instead of explicit routes.
   function destination(match, index){
     return match.advance || {index:Math.floor(index/2), slot:index%2 ? 'p2' : 'p1'};
