@@ -1855,7 +1855,171 @@ if(window.heroIntroTimer){
 
   document.addEventListener('fullscreenchange', () => setTimeout(fitBracketToScreen, 100));
 
-  setInterval(() => loadState(false), 4000);
+// Third-place playoff. Play it after both semifinals and before the final.
+  if (typeof thirdPlaceMatch !== 'function') {
+    const adminMatches = document.getElementById('admin-matches');
+
+    function playoff() {
+      const bracket = state.bracket;
+      if (!bracket) return null;
+
+      const semis = bracket.rounds[bracket.rounds.length - 2];
+      if (!semis || semis.length !== 2) return null;
+
+      const losers = semis.map(m => {
+        if (!m.winner || !m.p1 || !m.p2) return null;
+        return m.winner.id === m.p1.id ? m.p2 : m.p1;
+      });
+
+      if (!losers[0] || !losers[1]) return null;
+      return {
+        p1: losers[0],
+        p2: losers[1],
+        ...bracket.thirdPlace
+      };
+    }
+
+    function activePlayoff() {
+      const match = playoff();
+      return match && !match.winner && !state.champion ? match : null;
+    }
+
+    const originalAdmin = renderAdminMatches;
+    renderAdminMatches = function () {
+      if (adminMatches.contains(document.activeElement) &&
+          document.activeElement.tagName === 'INPUT') return;
+
+      originalAdmin();
+      const match = playoff();
+      if (!match || (state.champion && !match.winner)) return;
+
+      const finalGroup = adminMatches.lastElementChild;
+      if (!finalGroup) return;
+
+      const group = document.createElement('div');
+      group.className = 'round-group';
+      group.dataset.playoff = 'third';
+      group.innerHTML =
+        '<div class="round-group-title">Third Place</div>' +
+        renderMatchCardHtml(match, 0, 0, 2);
+      adminMatches.insertBefore(group, finalGroup);
+
+      if (!match.winner) {
+        finalGroup.innerHTML =
+          '<div class="round-group-title">Championship</div>' +
+          '<div class="match-card mc-pending">' +
+          'Scoring opens after the third-place match.</div>';
+      }
+    };
+
+    adminMatches.addEventListener('click', function (event) {
+      const button = event.target.closest('.declare-btn');
+      if (!button || !button.closest('[data-playoff="third"]')) return;
+      event.stopImmediatePropagation();
+
+      const match = activePlayoff();
+      if (!match) return;
+
+      const players = [match.p1, match.p2];
+      const winnerIndex = players.findIndex(p => p.id === button.dataset.playerId);
+      if (winnerIndex < 0) return;
+
+      const card = button.closest('.match-card');
+      const distances = Array.from(card.querySelectorAll('.match-side'), side => {
+        const ft = side.querySelector('.ft-input');
+        const inch = side.querySelector('.in-input');
+        if (!ft.value && !inch.value) return null;
+        return { feet: Number(ft.value), inches: Number(inch.value) };
+      });
+
+      const snapshot = {
+        bracket: JSON.parse(JSON.stringify(state.bracket)),
+        champion: state.champion,
+        championDismissed: state.championDismissed,
+        resultsLog: state.resultsLog.slice()
+      };
+      state.undoHistory = (state.undoHistory || []).concat(snapshot).slice(-20);
+
+      const winner = players[winnerIndex];
+      state.bracket.thirdPlace = {
+        winner,
+        d1: distances[0],
+        d2: distances[1]
+      };
+      state.resultsLog.unshift({
+        ri: state.bracket.rounds.length - 1,
+        roundLabel: 'Third Place',
+        winner: winner.name,
+        loser: players[1 - winnerIndex].name,
+        dist: distances[winnerIndex],
+        ts: Date.now()
+      });
+      state.resultsLog = state.resultsLog.slice(0, 30);
+      window.lastHeroMatchKey = null;
+      scheduleSave();
+      renderAll();
+    }, true);
+
+    // Use the existing TV card and matchup banner for third place.
+    function displayPlayoff(render) {
+      return function () {
+        const match = activePlayoff();
+        if (!match) return render();
+
+        const bracket = state.bracket;
+        const rounds = bracket.rounds.slice();
+        const last = rounds.length - 1;
+        rounds[last] = [match];
+        const originalLabel = roundLabel;
+        state.bracket = { ...bracket, rounds };
+        roundLabel = (index, total) =>
+          index === last ? 'Third Place' : originalLabel(index, total);
+
+        try {
+          return render();
+        } finally {
+          state.bracket = bracket;
+          roundLabel = originalLabel;
+        }
+      };
+    }
+
+    renderHero = displayPlayoff(renderHero);
+    renderBracketTree = displayPlayoff(renderBracketTree);
+
+    const originalNext = renderUpNextBanner;
+    renderUpNextBanner = function () {
+      if (!activePlayoff()) return originalNext();
+      const rounds = state.bracket.rounds;
+      const final = rounds[rounds.length - 1][0];
+      const banner = document.getElementById('up-next-banner');
+      banner.style.display = 'flex';
+      banner.innerHTML =
+        '<span class="un-tag">Up Next</span>' +
+        '<span class="un-round">Championship</span>' +
+        '<span class="un-names"><b>' + escapeHtml(final.p1.name) +
+        '</b> vs <b>' + escapeHtml(final.p2.name) + '</b></span>';
+    };
+
+    const originalOverlay = renderChampionOverlay;
+    renderChampionOverlay = function () {
+      originalOverlay();
+      let places = document.getElementById('playoff-placements');
+      if (places) places.remove();
+
+      const third = playoff()?.winner;
+      if (!state.champion || !third) return;
+      const rounds = state.bracket.rounds;
+      const final = rounds[rounds.length - 1][0];
+      const second = final.p1.id === state.champion.id ? final.p2 : final.p1;
+
+      places = document.createElement('div');
+      places.id = 'playoff-placements';
+      places.className = 'champ-recap-title';
+      places.textContent = '2nd • ' + second.name + '   |   3rd • ' + third.name;
+      document.getElementById('champ-name-big').after(places);
+    };
+  }  setInterval(() => loadState(false), 4000);
 
   initBokeh();
   loadState(true).then(() => {
