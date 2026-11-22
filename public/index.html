@@ -2019,6 +2019,100 @@ if(window.heroIntroTimer){
       places.textContent = '2nd • ' + second.name + '   |   3rd • ' + third.name;
       document.getElementById('champ-name-big').after(places);
     };
+   // Keep third-place scoring at the top of Enter Results.
+  {
+    const list = document.getElementById('admin-matches');
+    const panel = document.createElement('div');
+    panel.className = 'round-group';
+    list.before(panel);
+
+    function semifinalLosers() {
+      const semis = state.bracket?.rounds.at(-2) || [];
+      return semis.map(m => m.winner && m.p1 && m.p2
+        ? (m.winner.id === m.p1.id ? m.p2 : m.p1) : null);
+    }
+
+    const drawMatches = renderAdminMatches;
+    let lastCard = '';
+
+    renderAdminMatches = function () {
+      drawMatches();
+
+      const bracket = state.bracket;
+      const [a, b] = semifinalLosers();
+      const result = bracket?.thirdPlace;
+      const eligible = bracket && (bracket.playerCount ?? state.players.length) >= 4;
+      let body = '';
+
+      if (eligible && (result?.winner || !state.champion)) {
+        if (result?.winner) {
+          body = '<div class="mc-pending">3rd place: ' +
+            escapeHtml(result.winner.name) + '</div>';
+        } else if (!a || !b) {
+          body = '<div class="mc-pending">Waiting for both semifinal results.</div>';
+        } else {
+          body = renderMatchCardHtml({p1:a, p2:b}, 0, 0, 2);
+        }
+      }
+
+      const html = body && '<div class="round-group-title">Third Place</div>' + body;
+      if (html !== lastCard) {
+        panel.innerHTML = html;
+        lastCard = html;
+      }
+      panel.hidden = !body;
+
+      for (const group of list.querySelectorAll('.round-group')) {
+        const label = group.querySelector('.round-group-title')?.textContent.trim();
+        if (/^(third|3rd)[ -]place/i.test(label)) group.hidden = true;
+        if (a && b && !result?.winner && !state.champion &&
+            group.querySelector('.championship-entry')) group.hidden = true;
+      }
+    };
+
+    panel.addEventListener('click', event => {
+      const button = event.target.closest('.declare-btn');
+      if (!button || state.champion || state.bracket?.thirdPlace?.winner) return;
+
+      const players = semifinalLosers();
+      const i = players.findIndex(p => p && p.id === button.dataset.playerId);
+      if (i < 0 || !players[1-i]) return;
+
+      const distances = [];
+      for (const side of panel.querySelectorAll('.match-side')) {
+        const ft = side.querySelector('.ft-input');
+        const inch = side.querySelector('.in-input');
+        if (!ft.reportValidity() || !inch.reportValidity()) return;
+        distances.push(ft.value || inch.value
+          ? {feet:Number(ft.value), inches:Number(inch.value)} : null);
+      }
+
+      const previous = {
+        bracket: JSON.parse(JSON.stringify(state.bracket)),
+        resultsLog: state.resultsLog.slice(),
+        champion: state.champion,
+        championDismissed: state.championDismissed
+      };
+      state.undoHistory = (state.undoHistory || []).concat(previous).slice(-20);
+      state.bracket.thirdPlace = {
+        winner: players[i],
+        d1: distances[0],
+        d2: distances[1]
+      };
+      state.resultsLog.unshift({
+        ri: state.bracket.rounds.length - 1,
+        roundLabel: 'Third Place',
+        winner: players[i].name,
+        loser: players[1-i].name,
+        dist: distances[i],
+        ts: Date.now()
+      });
+      state.resultsLog = state.resultsLog.slice(0, 30);
+      window.lastHeroMatchKey = null;
+      scheduleSave();
+      renderAll();
+    });
+  }
   }  setInterval(() => loadState(false), 4000);
 
   initBokeh();
