@@ -2093,7 +2093,17 @@ if(window.heroIntroTimer){
       }
       panel.hidden = !body;
 
-      for (const group of list.querySelectorAll('.round-group')) {
+      const groups = Array.from(list.children).filter(group => group !== panel);
+   const finalGroup = groups[groups.length - 1];
+
+   if (finalGroup && panel.nextElementSibling !== finalGroup) {
+     list.insertBefore(panel, finalGroup);
+   }
+
+   // Let the third-place card handle its own Winner buttons.
+   panel.onclick = event => event.stopPropagation();
+
+   for (const group of groups) {
         const label = group.querySelector('.round-group-title')?.textContent.trim();
         if (/^(third|3rd)[ -]place/i.test(label)) group.hidden = true;
         if (a && b && !result?.winner && !state.champion &&
