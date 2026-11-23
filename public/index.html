@@ -1581,7 +1581,38 @@ if(window.heroIntroTimer){
       });
     });
 
-    wrap.innerHTML = html;
+    const next = document.createElement('div');
+    next.dataset.tvRound = '';
+    next.style.cssText = 'position:absolute;inset:0;';
+    next.innerHTML = html;
+
+    const current = wrap.querySelector('[data-tv-round]');
+    const title = layer => layer?.querySelector('.round-col-label')?.textContent;
+    const changed = current && title(current) !== title(next);
+
+    if (current && !changed) {
+      // Update scores in place during the same round.
+      current.replaceChildren(...next.childNodes);
+    } else if (changed && wrap.getClientRects().length && next.animate &&
+               !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      wrap.replaceChildren(current, next);
+      delete current.dataset.tvRound;
+      current.setAttribute('aria-hidden', 'true');
+      current.style.pointerEvents = 'none';
+
+      const fadeOut = current.animate(
+        [{ opacity: 1 }, { opacity: 0 }],
+        { duration: 320, easing: 'ease-in', fill: 'forwards' }
+      );
+      fadeOut.onfinish = () => current.remove();
+
+      next.animate(
+        [{ opacity: 0 }, { opacity: 1 }],
+        { duration: 440, delay: 160, easing: 'ease-out', fill: 'backwards' }
+      );
+    } else {
+      wrap.replaceChildren(next);
+    }
     wrap.style.left='50%';
     wrap.style.top='calc(50% - 25px)';
     wrap.style.transform='translate(-50%, -50%)';
